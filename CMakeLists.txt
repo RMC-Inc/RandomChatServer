@@ -3,4 +3,5 @@ project(RandomChatServer C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(RandomChatServer main.c)
+add_subdirectory(src)
+add_subdirectory(tests)
