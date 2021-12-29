@@ -9,12 +9,6 @@
 
 #include "server.h"
 
-#include "datastructures/entity/user.h"
-#include "datastructures/vector.h"
-
-
-
-
 
 void* clientHandler(void*);
 

@@ -9,7 +9,7 @@
 #include "../queue.h"
 
 typedef struct {
-    char name[30];
+    char name[31];
     unsigned int id; // unique
 
     int icon;

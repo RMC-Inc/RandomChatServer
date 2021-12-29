@@ -5,7 +5,7 @@
 #ifndef RANDOMCHATSERVER_USER_H
 #define RANDOMCHATSERVER_USER_H
 
-#define NICK_LEN 20
+#define NICK_LEN 21
 
 
 typedef struct USR{
