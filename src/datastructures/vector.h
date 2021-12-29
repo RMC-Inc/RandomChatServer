@@ -27,6 +27,7 @@ Room* removeFrom(RoomVector*, unsigned int);
 long indexById(RoomVector*, unsigned int);
 Room* getbyId(RoomVector*, unsigned int);
 Room* removeById(RoomVector*, unsigned int);
+unsigned int nextId(RoomVector*); // TODO
 
 
 #endif //RANDOMCHATSERVER_VECTOR_H

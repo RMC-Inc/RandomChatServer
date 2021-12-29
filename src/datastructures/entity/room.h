@@ -10,7 +10,7 @@
 
 typedef struct {
     char name[30];
-    unsigned int id; // autoincrement
+    unsigned int id; // unique
 
     int icon;
     char iconColor[3];
@@ -19,7 +19,11 @@ typedef struct {
     unsigned int time; // in seconds
 
     pthread_mutex_t mutex;
-    UserQueue waitqueue;
+    UserQueue waitlist;
+    long usersCount;
 } Room;
+
+Room* newRoom(char* name, unsigned int id, int icon, char* iColor, char* rColor, unsigned int time);
+
 
 #endif //RANDOMCHATSERVER_ROOM_H

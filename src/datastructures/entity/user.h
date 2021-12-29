@@ -5,15 +5,12 @@
 #ifndef RANDOMCHATSERVER_USER_H
 #define RANDOMCHATSERVER_USER_H
 
+#define NICK_LEN 20
 
-typedef struct {
-    char nickname[20];
-    int socketDes;
+
+typedef struct USR{
+    char nickname[NICK_LEN];
+    int socketfd;
 } User;
-
-typedef struct {
-    User* first;
-    User* second;
-} Pair;
 
 #endif //RANDOMCHATSERVER_USER_H

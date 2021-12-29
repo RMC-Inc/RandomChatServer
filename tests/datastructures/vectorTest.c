@@ -2,7 +2,7 @@
 #include <datastructures/vector.h>
 #include <stdio.h>
 
-Room* newRoom(unsigned int id){
+Room* generateRoom(unsigned int id){
     Room* new = malloc(sizeof (Room));
     new->id = id;
     return new;
@@ -38,11 +38,11 @@ int main(){
     printf(" OK\n");
 
     printf("Add new elements ");
-    add(&v, newRoom(3));
-    add(&v, newRoom(9));
-    add(&v, newRoom(77));
-    add(&v, newRoom(153));
-    add(&v, newRoom(300));
+    add(&v, generateRoom(3));
+    add(&v, generateRoom(9));
+    add(&v, generateRoom(77));
+    add(&v, generateRoom(153));
+    add(&v, generateRoom(300));
 
     printf("OK\n");
 

@@ -22,7 +22,7 @@ void newVector(RoomVector* vec){
 
     vec->rooms = malloc(sizeof(Room*) * vec->realSize);
 
-    // TODO init mutex
+    vec->mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
     vec->nullCount = 0;
 }
 
@@ -38,7 +38,18 @@ void insertionSort(RoomVector* v){ // private
     }
 }
 
+unsigned int nextAvailableId(RoomVector* vec){
+    unsigned int id = 0;
+    unsigned i = 0;
+    while (i < vec->size && id == vec->rooms[i]->id) {
+        id++;
+        i++;
+    }
+    return id;
+}
+
 void add(RoomVector* vec, Room* room){
+    room->id = nextAvailableId(vec);
     vec->rooms[vec->size++] = room;
     insertionSort(vec);
     Expand(vec);
