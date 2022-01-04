@@ -8,12 +8,9 @@
 
 int dispatch(User* usr, RoomVector* vec, int command, char* msg){
     switch (command) {
-        case ENTER_IN_ROOM: {
-
-            if (enterInRoom(usr, atoi(msg), vec) == -1)
-                return 0;
-            break;
-        }
+        case ENTER_IN_ROOM:
+            enterInRoom(usr, atoi(msg), vec);
+            return 0;
         case NEW_ROOM:{
             Room* room = malloc(sizeof(Room));
 
@@ -39,9 +36,9 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg){
 }
 
 
-int enterInRoom(User* user , unsigned int id, RoomVector* vec){
+void enterInRoom(User* user , unsigned int id, RoomVector* vec){
     Room* room = getbyId(vec, id);
-    if(room == NULL) return -1;
+    if(room == NULL) return;
 
     pthread_mutex_lock(&room->mutex);
     room->usersCount++;
@@ -49,17 +46,14 @@ int enterInRoom(User* user , unsigned int id, RoomVector* vec){
 
     int next;
     do{
-        Connection* conn;
-        User* user2 = find(user, room, &conn);
+        Connection* conn = find(user, room);
+        User* user2 = (conn->user1 == user)? conn->user2: conn->user1;
         next = startChatting(user, user2, conn);
-        // TODO free connection
     } while (next);
 
     pthread_mutex_lock(&room->mutex);
     room->usersCount--;
     pthread_mutex_unlock(&room->mutex);
-
-    return 0;
 }
 
 void addRoom(Room* room, RoomVector* vec){
@@ -70,64 +64,43 @@ void addRoom(Room* room, RoomVector* vec){
 
 void sendRooms(User* user, RoomVector* roomVector, char* buff){
     for (int i = 0; i < roomVector->size; ++i) {
-        int len = sprintf(buff, "%s %d %d\n", roomVector->rooms[i]->name, roomVector->rooms[i]->id, roomVector->rooms[i]->usersCount);
+        int len = sprintf(buff, "%s %d %ld\n", roomVector->rooms[i]->name, roomVector->rooms[i]->id, roomVector->rooms[i]->usersCount);
         write(user->socketfd, buff, len);
     }
 }
-
-/**
- * On Server
- *      rec u1
- *          m -> send u2 m+arg
- *          e | rec error -> send u2 e, exit
- *          n -> send u2 n, skip
- *      if send error -> u2 has exit, send u1 e
- * On client
- *     recv server
- *          m -> display arg
- *          e -> display "user disconnected", if next btn send server n else send e
- *          n -> display "user skipped", send server n or e
- * */
 
 int startChatting(User* userRecv, User* userSend, Connection* conn){ // 0 -> exit; 1 -> next user
     char buff[BUFF_LEN];
     ssize_t len;
 
-    sprintf(buff, "r ok %s\n", userSend->nickname);
+    sprintf(buff, "r %s\n", userSend->nickname);
     write(userRecv->socketfd, buff, strlen(buff));
 
-    while (1){
+    while (1) {
         len = read(userRecv->socketfd, buff, BUFF_LEN);
-        if(len < 0) { // user exit = recv EXIT
-            if(conn->isOpen){
+        if(len < 0) { // user close socket === recv EXIT
+            if(isOpen(conn)){
                 closeConnection(conn);
                 buff[0] = 'e';
                 write(userSend->socketfd, buff, 1);
-            }
+            } else closeConnection(conn);
             return 0;
         }
 
         switch (buff[0]) {
             case SEND_MSG:
-                len = write(userSend->socketfd, buff, len);
-                if (len < 0) { // second user exit
-                    buff[0] = 'e';
-                    len = write(userRecv->socketfd, buff, 1);
-                    if(len >= 0){
-                        len = read(userRecv->socketfd, buff, BUFF_LEN);
-                        if(len >= 0 && buff[0] == NEXT_USER) return 1;
-                    }
-                    return 0;
+                if(isOpen(conn)){
+                    write(userSend->socketfd, buff, len);
                 }
                 break;
             case NEXT_USER:
-                if(conn->isOpen){
+                if(isOpen(conn)){
                     closeConnection(conn);
                     write(userSend->socketfd, buff, len);
-                }
+                } else closeConnection(conn);
                 return 1;
             case EXIT:
-                if(conn->isOpen){
+                if(isOpen(conn)){
                     closeConnection(conn);
                     write(userSend->socketfd, buff, len);
                 }

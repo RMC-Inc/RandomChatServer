@@ -3,22 +3,22 @@
 
 #include "entity/user.h"
 
-struct UserNode{
-    User* data;
-    struct UserNode* next;
+struct QueueNode{
+    void* data;
+    struct QueueNode* next;
 };
 
 
 typedef struct {
-    struct UserNode* front;
-    struct UserNode* rear;
+    struct QueueNode* front;
+    struct QueueNode* rear;
     unsigned int size;
-} UserQueue;
+} Queue;
 
-void newUserQueue(UserQueue*); // default constructor
+void newQueue(Queue*); // default constructor
 
-User* top(UserQueue);
-void enqueue(UserQueue*, User*);
-User* dequeue(UserQueue*);
+void* top(Queue);
+void enqueue(Queue*, void*);
+void* dequeue(Queue*);
 
 #endif //RANDOMCHATSERVER_QUEUE_H

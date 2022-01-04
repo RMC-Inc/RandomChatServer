@@ -12,4 +12,6 @@ Room* newRoom(char* name, unsigned int id, int icon, char* iColor, char* rColor,
     room->time = time;
 
     room->mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
+    newQueue(&room->waitlist);
+    return room;
 }

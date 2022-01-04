@@ -19,7 +19,7 @@ typedef struct {
     unsigned int time; // in seconds
 
     pthread_mutex_t mutex;
-    UserQueue waitlist;
+    Queue waitlist;
     long usersCount;
 } Room;
 

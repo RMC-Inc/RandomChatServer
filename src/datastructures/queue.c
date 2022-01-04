@@ -2,21 +2,21 @@
 #include <stdlib.h>
 
 
-void newUserQueue(UserQueue* queue){
+void newQueue(Queue* queue){
     queue->front = NULL;
     queue->rear = NULL;
     queue->size = 0;
 }
 
-User* top(UserQueue queue){
+void* top(Queue queue){
     if(queue.size == 0) return NULL;
     return queue.front->data;
 }
 
 // front -> data -> data <- rear
-void enqueue(UserQueue* queue,  User* user){
-    struct UserNode* new = malloc(sizeof(struct UserNode));
-    new->data = user;
+void enqueue(Queue* queue,  void* data){
+    struct QueueNode* new = malloc(sizeof(struct QueueNode));
+    new->data = data;
     new->next = NULL;
 
     if(queue->size == 0){
@@ -28,11 +28,12 @@ void enqueue(UserQueue* queue,  User* user){
     }
     queue->size++;
 }
-User* dequeue(UserQueue* queue){
+
+void* dequeue(Queue* queue){
     if(queue->size > 0){
         User* ret = queue->front->data;
 
-        struct UserNode* del = queue->front;
+        struct QueueNode* del = queue->front;
         queue->front = queue->front->next;
 
         if(queue->size == 1) queue->rear = NULL;

@@ -29,7 +29,7 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg); // 1 -> contin
 
 // ---- FUNCTIONS ----
 
-int enterInRoom(User*, unsigned int id, RoomVector*); // Find another user. 1 ok -1 error
+void enterInRoom(User*, unsigned int id, RoomVector*); // Find another user. 1 ok -1 error
 void addRoom(Room*, RoomVector*);
 void sendRooms(User*, RoomVector*, char*);
 

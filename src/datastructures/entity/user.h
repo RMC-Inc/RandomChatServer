@@ -7,10 +7,13 @@
 
 #define NICK_LEN 21
 
+#include <pthread.h>
+
 
 typedef struct USR{
     char nickname[NICK_LEN];
     int socketfd;
+    pthread_t tid;
 } User;
 
 #endif //RANDOMCHATSERVER_USER_H

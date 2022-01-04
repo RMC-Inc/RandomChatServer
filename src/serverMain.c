@@ -90,6 +90,7 @@ void* clientHandler(void* arg){
     printf("[t%ld] Thread started\n", tid);
 
     User* user = (User*) arg;
+    user->tid = pthread_self();
     msglen = recv(user->socketfd, user->nickname, NICK_LEN, 0);
     user->nickname[msglen] = '\0';
 
