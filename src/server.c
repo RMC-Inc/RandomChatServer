@@ -10,6 +10,12 @@
 
 int dispatch(User* usr, RoomVector* vec, int command, char* msg){
     switch (command) {
+        case DELETE_ROOM:
+            deleteRoom(vec, msg);
+            break;
+        case CHANGE_NICKNAME:
+            changeNickname(usr, msg);
+            break;
         case ENTER_IN_ROOM:
             enterInRoom(usr, atoi(msg), vec);
             return 0;
@@ -28,6 +34,24 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg){
     return 1;
 }
 
+
+void deleteRoom(RoomVector* vec, char* msg){ //TODO
+    int roomId;
+    sscanf(msg, "%d", &roomId);
+    printf("Debug room id: %d\n", roomId);
+}
+
+void changeNickname(User* user, char* msg){
+    char newNick[NICK_LEN];
+    stringInside(msg, '[', ']', newNick);
+
+    //if(!strcmp(newNick, "") || !strcmp(newNick, " ")) return; controllo ridondante, è proprio necessario??
+
+    pthread_mutex_lock(&user->mutex);
+    strcpy(user->nickname, newNick);
+    pthread_mutex_unlock(&user->mutex);
+
+}
 
 void enterInRoom(User* user , unsigned int id, RoomVector* vec){
     Room* room = getbyId(vec, id);
@@ -65,8 +89,9 @@ void addRoom(char* msg, RoomVector* vec){
            &t
    );
 
-    unsigned char iconC[3] = {(unsigned char) iconColor[0], (unsigned char) iconColor[2], (unsigned char) iconColor[3]};
-    unsigned char roomC[3] = {(unsigned char) roomColor[0], (unsigned char) roomColor[2], (unsigned char) roomColor[3]};
+    unsigned char iconC[3] = {(unsigned char) iconColor[0], (unsigned char) iconColor[1], (unsigned char) iconColor[2]};
+    unsigned char roomC[3] = {(unsigned char) roomColor[0], (unsigned char) roomColor[1], (unsigned char) roomColor[2]};
+
 
     stringInside(msg, '[', ']', name);
 
