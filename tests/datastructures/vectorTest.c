@@ -10,7 +10,7 @@ Room* generateRoom(unsigned int id){
 
 int main(){
     RoomVector v;
-    newVector(&v);
+    initVector(&v);
     printf("New Vector\n");
 
     int size = 0;

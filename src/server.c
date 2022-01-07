@@ -20,10 +20,10 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg){
             enterInRoom(usr, atoi(msg), vec);
             return 0;
         case NEW_ROOM:
-            addRoom(msg, vec);
+            addRoom(msg, vec, usr);
             break;
         case ROOM_LIST:
-            sendRooms(usr, vec, msg-1);
+            sendRooms(usr, vec, msg);
             break;
         case EXIT:
             return 0;
@@ -75,7 +75,7 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec){
     pthread_mutex_unlock(&room->mutex);
 }
 
-void addRoom(char* msg, RoomVector* vec){
+void addRoom(char* msg, RoomVector* vec, User* user){
     char name[ROOM_NAME_LEN];
 
     int icon;
@@ -95,26 +95,50 @@ void addRoom(char* msg, RoomVector* vec){
 
     stringInside(msg, '[', ']', name);
 
+
     pthread_mutex_lock(&vec->mutex);
-    add(vec, newRoom(name, icon, iconC, roomC, t));
+    unsigned int id = add(vec, newRoom(name, icon, iconC, roomC, t));
     pthread_mutex_unlock(&vec->mutex);
+
+    int len = sprintf(msg, "%c %d\n", NEW_ROOM, id);
+    write(user->socketfd, msg, len+1);
 }
 
 void sendRooms(User* user, RoomVector* roomVector, char* buff){
-    int len = sprintf(buff, "%d\n", roomVector->size);
+
+    unsigned int size;
+    sscanf(buff, "%d", &size);
+
+    int len;
+    char name[ROOM_NAME_LEN];
+    int nameLen = stringInside(buff, '[', ']', name);
+
+    RoomVector* search;
+    if(nameLen > 0)
+        search = searchByName(roomVector, name);
+    RoomVector* source = (nameLen > 0)? search: roomVector;
+
+    if(source->size < size) size = source->size;
+
+    len = sprintf(buff, "%d\n", size); // how many rooms will be sent
     write(user->socketfd, buff, len);
-    for (int i = 0; i < roomVector->size; ++i) {
+
+    // TODO inviare in ordine decrescente di usercount
+
+    for (int i = 0; i < size && size <= source->size; ++i) {
+        Room* r = source->rooms[i];
         len = sprintf(buff, "%d %ld %d.%d.%d %d %d.%d.%d %d [%s]\n",
-                          roomVector->rooms[i]->id,
-                          roomVector->rooms[i]->usersCount,
-                          roomVector->rooms[i]->roomColor[0], roomVector->rooms[i]->roomColor[1], roomVector->rooms[i]->roomColor[2],
-                          roomVector->rooms[i]->icon,
-                          roomVector->rooms[i]->iconColor[0], roomVector->rooms[i]->iconColor[1], roomVector->rooms[i]->iconColor[2],
-                          roomVector->rooms[i]->time,
-                          roomVector->rooms[i]->name
+                      r->id,
+                      r->usersCount,
+                      r->roomColor[0], r->roomColor[1], r->roomColor[2],
+                      r->icon,
+                      r->iconColor[0], r->iconColor[1], r->iconColor[2],
+                      r->time,
+                      r->name
         );
         write(user->socketfd, buff, len);
     }
+    if (nameLen > 0) deleteVector(search);
 }
 
 int startChatting(User* userRecv, User* userSend, Connection* conn){ // 0 -> exit; 1 -> next user

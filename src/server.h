@@ -7,7 +7,7 @@
 #include "Finder/finder.h"
 
 
-#define PORT 8081
+#define PORT 8080
 #define BUFF_LEN 500
 
 enum COMMAND{
@@ -16,7 +16,8 @@ enum COMMAND{
     CHANGE_NICKNAME = 'c', // usage: c [new_nick]
     ENTER_IN_ROOM = 'r',
     NEW_ROOM = 'a', // msg pattern: r.g.b icon r.g.b t [roomname]
-    ROOM_LIST = 'l', // msg pattern: id usercount r.g.b icon r.g.b t [roomname]
+    ROOM_LIST = 'l', // input: l size [name]
+    // msg pattern: id usercount r.g.b icon r.g.b t [roomname]
 
     // ---- From ChatController ----
     NEXT_USER = 'n',
@@ -34,7 +35,7 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg); // 1 -> contin
 void deleteRoom(RoomVector*, char*);
 void changeNickname(User*, char*);
 void enterInRoom(User*, unsigned int id, RoomVector*);
-void addRoom(char*, RoomVector*);
+void addRoom(char*, RoomVector*, User*);
 void sendRooms(User*, RoomVector*, char*);
 
 

@@ -18,14 +18,24 @@ typedef struct {
     pthread_mutex_t mutex;
 } RoomVector;
 
-void newVector(RoomVector*); // Default constructor
+// *** Generics Vector functions ***
 
-void add(RoomVector*, Room*);
+void initVector(RoomVector*); // Static Default constructor
+void freeRooms(RoomVector*); // Static destructor
+
+RoomVector* newVector(); // Dynamic Default constructor
+void deleteVector(RoomVector*); // Dynamic destructor
+
+unsigned int add(RoomVector*, Room*);
 Room* removeFrom(RoomVector*, unsigned int);
+
+// *** Specific RoomVector functions ***
 
 long indexById(RoomVector*, unsigned int);
 Room* getbyId(RoomVector*, unsigned int);
 Room* removeById(RoomVector*, unsigned int);
+
+RoomVector* searchByName(RoomVector*, char*); // Must be deleted
 
 
 #endif //RANDOMCHATSERVER_VECTOR_H

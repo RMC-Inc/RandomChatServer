@@ -16,8 +16,7 @@ void* clientHandler(void*);
 RoomVector*  roomVector;
 int main() {
 // ----- Load rooms from file -----
-    roomVector = malloc(sizeof(RoomVector));
-    newVector(roomVector);
+    roomVector = newVector();
 
     // Todo load rooms
     Room* r = newRoom("Stanza di prova1", 0, (unsigned char[]) {1 , 2, 4}, (unsigned char[]){1, 2, 4}, 0);
@@ -79,7 +78,7 @@ int main() {
     }
 
     close(server);
-    free(roomVector);
+    deleteVector(roomVector);
     return 0;
 }
 
@@ -101,7 +100,8 @@ void* clientHandler(void* arg){
 
 // ----- Sending rooms -----
 
-    sendRooms(user, roomVector, buff);
+    strcpy(buff, "20 []");
+    sendRooms(user, roomVector, buff); // TODO da rimuovere, questo lo deve richiedere il client. Solo per debug!!
 
     do{
         msglen = recv(user->socketfd, buff, BUFF_LEN, 0);

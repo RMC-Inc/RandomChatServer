@@ -1,4 +1,6 @@
 #include "vector.h"
+#include <ctype.h>
+#include <string.h>
 
 
 void Expand(RoomVector* vec){ // private
@@ -16,7 +18,7 @@ void Reduce(RoomVector* vec){ // private
     }
 }
 
-void newVector(RoomVector* vec){
+void initVector(RoomVector* vec){
     vec->size = 0;
     vec->realSize = INIT_SIZE;
 
@@ -24,6 +26,24 @@ void newVector(RoomVector* vec){
 
     vec->mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
 }
+
+RoomVector* newVector(){
+    RoomVector* vec = malloc(sizeof(RoomVector));
+    initVector(vec);
+    return vec;
+}
+
+
+void freeRooms(RoomVector* vec){
+    free(vec->rooms);
+
+}
+
+void deleteVector(RoomVector* vec){
+    freeRooms(vec);
+    free(vec);
+}
+
 
 void insertionSort(RoomVector* v){ // private
     for (unsigned int i = 1; i < v->size; ++i) {
@@ -37,7 +57,7 @@ void insertionSort(RoomVector* v){ // private
     }
 }
 
-unsigned int nextAvailableId(RoomVector* vec){
+unsigned int nextAvailableId(RoomVector* vec){ // private
     unsigned int id = 0;
     unsigned i = 0;
     while (i < vec->size && id == vec->rooms[i]->id) {
@@ -47,11 +67,12 @@ unsigned int nextAvailableId(RoomVector* vec){
     return id;
 }
 
-void add(RoomVector* vec, Room* room){
+unsigned int add(RoomVector* vec, Room* room){
     room->id = nextAvailableId(vec);
     vec->rooms[vec->size++] = room;
     insertionSort(vec);
     Expand(vec);
+    return room->id;
 }
 
 Room* removeFrom(RoomVector* vec, unsigned int index){
@@ -93,6 +114,27 @@ Room* removeById(RoomVector* vec, unsigned int id){
     if(i == -1) return NULL;
     else return removeFrom(vec, i);
 }
+
+void strLowercase(char* out){ // private
+    for (; *out != '\0'; ++out) *out = tolower(*out);
+}
+
+RoomVector* searchByName(RoomVector* in, char* name){
+    RoomVector* out = newVector();
+    strLowercase(name);
+    char roomName[ROOM_NAME_LEN];
+
+    for (int i = 0; i < in->size; ++i) {
+        strcpy(roomName, in->rooms[i]->name);
+        strLowercase(roomName);
+        if(strstr(roomName, name)){
+            add(out, in->rooms[i]);
+        }
+    }
+
+    return out;
+}
+
 
 
 
