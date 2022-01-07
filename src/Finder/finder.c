@@ -1,9 +1,8 @@
 #include "finder.h"
 #include <unistd.h>
-#include <stdlib.h>
 #include <signal.h>
-#include "../datastructures/queue.h"
 
+#include <pthread.h>
 
 
 // TODO free connection
@@ -11,11 +10,16 @@
 
 // *** Finder ***
 
-void signHandler(int signal){ return; }
+void signHandler(int sig){ return; }
 
 Connection* find(User* user, Room* room){
     pthread_mutex_lock(&room->mutex);
-    if(room->waitlist.size == 0 /*TODO || top == prevUser*/){
+    pthread_t tid = -1;
+    if(room->waitlist.size != 0){
+        tid = ((Connection*) top(&room->waitlist))->user1->tid;
+    }
+    if(room->waitlist.size == 0 ||
+    (tid != -1 && pthread_equal(user->prev_tid, tid))){
         Connection* conn = createConnection(user);
 
         enqueue(&room->waitlist, conn);

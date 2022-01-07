@@ -8,13 +8,15 @@
 #include <pthread.h>
 #include "../queue.h"
 
+#define ROOM_NAME_LEN 31
+
 typedef struct {
-    char name[31];
+    char name[ROOM_NAME_LEN];
     unsigned int id; // unique
 
     int icon;
-    char iconColor[3];
-    char roomColor[3];
+    unsigned char iconColor[3];
+    unsigned char roomColor[3];
 
     unsigned int time; // in seconds
 
@@ -23,7 +25,7 @@ typedef struct {
     long usersCount;
 } Room;
 
-Room* newRoom(char* name, unsigned int id, int icon, char* iColor, char* rColor, unsigned int time);
+Room* newRoom(char* name, int icon, unsigned char* iColor, unsigned char* rColor, unsigned int time);
 
 
 #endif //RANDOMCHATSERVER_ROOM_H

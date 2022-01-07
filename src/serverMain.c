@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <signal.h>
 
 #include "server.h"
 
@@ -19,10 +20,11 @@ int main() {
     newVector(roomVector);
 
     // Todo load rooms
-    Room* r = malloc(sizeof (Room));
-    r->id = 123;
-    strcpy(r->name, "Stanza di prova");
+    Room* r = newRoom("Stanza di prova1", 0, (unsigned char[]) {1 , 2, 4}, (unsigned char[]){1, 2, 4}, 0);
     add(roomVector, r);
+    r = newRoom("Stanza di prova2", 5000, (unsigned char[]) {255 , 200, 55}, (unsigned char[]){22, 0, 100}, 5);
+    add(roomVector, r);
+
 
 // ----- Starting server -----
     int server, client;
@@ -69,6 +71,7 @@ int main() {
 
         User* user = malloc(sizeof(User));
         user->socketfd = client;
+        user->prev_tid = -1;
 
         pthread_create(&tid, NULL, clientHandler, (void*) user);
         pthread_detach(tid);
@@ -84,8 +87,10 @@ int main() {
 
 void* clientHandler(void* arg){
     char buff[BUFF_LEN];
-    ssize_t msglen = 0;
+    ssize_t msglen;
     pthread_t tid = pthread_self();
+
+    signal(SIGPIPE, SIG_IGN);
 
     printf("[t%ld] Thread started\n", tid);
 

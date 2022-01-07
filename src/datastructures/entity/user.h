@@ -14,6 +14,8 @@ typedef struct USR{
     char nickname[NICK_LEN];
     int socketfd;
     pthread_t tid;
+
+    pthread_t prev_tid;
 } User;
 
 #endif //RANDOMCHATSERVER_USER_H

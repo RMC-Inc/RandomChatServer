@@ -8,9 +8,9 @@ void newQueue(Queue* queue){
     queue->size = 0;
 }
 
-void* top(Queue queue){
-    if(queue.size == 0) return NULL;
-    return queue.front->data;
+void* top(Queue* queue){
+    if(queue->size == 0) return NULL;
+    return queue->front->data;
 }
 
 // front -> data -> data <- rear

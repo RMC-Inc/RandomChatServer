@@ -23,7 +23,6 @@ void newVector(RoomVector* vec){
     vec->rooms = malloc(sizeof(Room*) * vec->realSize);
 
     vec->mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
-    vec->nullCount = 0;
 }
 
 void insertionSort(RoomVector* v){ // private

@@ -16,7 +16,6 @@ typedef struct {
     Room** rooms;
 
     pthread_mutex_t mutex;
-    unsigned int nullCount;
 } RoomVector;
 
 void newVector(RoomVector*); // Default constructor

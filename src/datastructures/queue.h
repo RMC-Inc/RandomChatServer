@@ -17,7 +17,7 @@ typedef struct {
 
 void newQueue(Queue*); // default constructor
 
-void* top(Queue);
+void* top(Queue*);
 void enqueue(Queue*, void*);
 void* dequeue(Queue*);
 
