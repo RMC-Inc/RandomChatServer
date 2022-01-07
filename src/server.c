@@ -43,14 +43,15 @@ void deleteRoom(RoomVector* vec, char* msg){ //TODO
 
 void changeNickname(User* user, char* msg){
     char newNick[NICK_LEN];
-    stringInside(msg, '[', ']', newNick);
+    int len = stringInside(msg, '[', ']', newNick);
 
-    //if(!strcmp(newNick, "") || !strcmp(newNick, " ")) return; controllo ridondante, è proprio necessario??
-
-    pthread_mutex_lock(&user->mutex);
-    strcpy(user->nickname, newNick);
-    pthread_mutex_unlock(&user->mutex);
-
+    // controllo ridondante, è proprio necessario?? Ricorda gli hacker russi... Comunque così è anche più efficiente di strcmp
+    for (int i = 0; i < len; ++i) {
+        if(newNick[i] != ' '){
+            strcpy(user->nickname, newNick);
+            return;
+        }
+    }
 }
 
 void enterInRoom(User* user , unsigned int id, RoomVector* vec){

@@ -16,8 +16,6 @@ typedef struct USR{
     pthread_t tid;
 
     pthread_t prev_tid;
-
-    pthread_mutex_t mutex;
 } User;
 
 #endif //RANDOMCHATSERVER_USER_H
