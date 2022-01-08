@@ -21,4 +21,6 @@ void* top(Queue*);
 void enqueue(Queue*, void*);
 void* dequeue(Queue*);
 
+void* extract(Queue*, void*);
+
 #endif //RANDOMCHATSERVER_QUEUE_H

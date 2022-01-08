@@ -18,7 +18,7 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg){
             break;
         case ENTER_IN_ROOM:
             enterInRoom(usr, atoi(msg), vec);
-            return 0;
+            break;
         case NEW_ROOM:
             addRoom(msg, vec, usr);
             break;
@@ -65,6 +65,8 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec){
     int next;
     do{
         Connection* conn = find(user, room);
+        if(conn == NULL) break;
+
         User* user2 = (conn->user1 == user)? conn->user2: conn->user1;
         user->prev_tid = user2->tid;
 

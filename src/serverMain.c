@@ -89,7 +89,7 @@ void* clientHandler(void* arg){
     ssize_t msglen;
     pthread_t tid = pthread_self();
 
-    signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN); // TODO
 
     printf("[t%ld] Thread started\n", tid);
 

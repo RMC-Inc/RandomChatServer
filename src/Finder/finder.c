@@ -1,6 +1,11 @@
 #include "finder.h"
 #include <unistd.h>
+#include <stdlib.h>
+
 #include <signal.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <errno.h>
 
 #include <pthread.h>
 
@@ -24,11 +29,39 @@ Connection* find(User* user, Room* room){
 
         enqueue(&room->waitlist, conn);
 
-        signal(SIGUSR1, signHandler);
+        signal(SIGUSR1, signHandler); // todo reset handler
 
         pthread_mutex_unlock(&room->mutex);
 
-        while (conn->user2 == NULL) pause();
+        while (conn->user2 == NULL){
+            fd_set rfdSet; // TODO errorFdSet
+            FD_ZERO(&rfdSet);
+            FD_SET(user->socketfd, &rfdSet);
+
+            int retVal = select(user->socketfd + 1, &rfdSet, NULL, NULL, NULL);
+            if(retVal >= 0){
+                if(FD_ISSET(user->socketfd, &rfdSet)){
+                    char buff[10];
+                    unsigned int len = recv(user->socketfd, buff, 10, MSG_DONTWAIT);
+                    if(len > 0 && buff[0] == 'e'){
+                        pthread_mutex_lock(&room->mutex);
+                        void* removeRet = extract(&room->waitlist, conn);
+                        pthread_mutex_unlock(&room->mutex);
+
+                        if(removeRet == NULL){ // Connection extract by other user
+                            if(isOpen(conn)){
+                                closeConnection(conn);
+                                buff[1] = '\n';
+                                write(conn->user2->socketfd, buff, 2);
+                            } else closeConnection(conn);
+                        } else {
+                            free(conn); // double close not necessary
+                        }
+                        return NULL;
+                    }
+                }
+            }
+        }
 
         return conn;
     } else {
