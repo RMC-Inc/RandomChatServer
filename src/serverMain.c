@@ -37,20 +37,20 @@ int main() {
     server = socket(PF_INET, SOCK_STREAM, 0);
     if(server < 0) {
         perror("Error Creating server socket.\n"); perror(errno);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
 
     printf("Binding server socket\n");
     if(bind(server, (struct sockaddr*) &address, sizeof(address)) < 0){
         perror("Error Binding.\n"); perror(errno);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     printf("Set server to listening mode.\n");
     if(listen(server, 10) < 0){
         perror("Error Listen.\n"); perror(errno);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
 
@@ -62,7 +62,7 @@ int main() {
         client = accept(server, NULL, NULL);
         if (client == -1){
             perror("Error client accept.\n"); perror(errno);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         printf("New connection starting thread...\n");
@@ -95,13 +95,24 @@ void* clientHandler(void* arg){
 
     User* user = (User*) arg;
     user->tid = pthread_self();
-    msglen = recv(user->socketfd, user->nickname, NICK_LEN, 0);
-    user->nickname[msglen] = '\0';
+
+    // Setting nickname
+
+    msglen = recv(user->socketfd, buff, NICK_LEN, 0);
+    buff[msglen] = '\0';
+
+    if(!changeNickname(user, buff)){
+        fprintf(stderr, "[t%ld] Invalid nickname, closing connection.\n", tid);
+        close(user->socketfd);
+        free(user);
+        pthread_exit(NULL);
+    }
+
 
 // ----- Sending rooms -----
 
-    strcpy(buff, "20 []");
-    sendRooms(user, roomVector, buff); // TODO da rimuovere, questo lo deve richiedere il client. Solo per debug!!
+    //strcpy(buff, "20 []");
+    //sendRooms(user, roomVector, buff); // TODO da rimuovere, questo lo deve richiedere il client. Solo per debug!!
 
     do{
         msglen = recv(user->socketfd, buff, BUFF_LEN, 0);

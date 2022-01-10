@@ -41,7 +41,7 @@ void deleteRoom(RoomVector* vec, char* msg){ //TODO
     printf("Debug room id: %d\n", roomId);
 }
 
-void changeNickname(User* user, char* msg){
+int changeNickname(User* user, char* msg){
     char newNick[NICK_LEN];
     int len = stringInside(msg, '[', ']', newNick);
 
@@ -49,14 +49,22 @@ void changeNickname(User* user, char* msg){
     for (int i = 0; i < len; ++i) {
         if(newNick[i] != ' '){
             strcpy(user->nickname, newNick);
-            return;
+            printf("[%lu] Nickname is set to [%s].\n", pthread_self(), user->nickname);
+            return 1;
         }
     }
+    return 0;
 }
 
 void enterInRoom(User* user , unsigned int id, RoomVector* vec){
+
+    printf("[%lu] Try to enter in room #%d.\n", pthread_self(), id);
+
     Room* room = getbyId(vec, id);
-    if(room == NULL) return;
+    if(room == NULL) {
+        printf("[%lu] Error entering in room #%d. Id not valid\n", pthread_self(), id);
+        return;
+    }
 
     pthread_mutex_lock(&room->mutex);
     room->usersCount++;
@@ -64,6 +72,7 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec){
 
     int next;
     do{
+        printf("[%lu] Searching for user.\n", pthread_self());
         Connection* conn = find(user, room);
         if(conn == NULL) break;
 
@@ -72,6 +81,8 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec){
 
         next = startChatting(user, user2, conn);
     } while (next);
+
+    printf("[%lu] Exit from room #%d.\n", pthread_self(), id);
 
     pthread_mutex_lock(&room->mutex);
     room->usersCount--;
@@ -139,6 +150,7 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
                       r->time,
                       r->name
         );
+        printf("[%lu] Sending room to client {%s}", pthread_self(), buff);
         write(user->socketfd, buff, len);
     }
     if (nameLen > 0) deleteVector(search);
@@ -148,12 +160,12 @@ int startChatting(User* userRecv, User* userSend, Connection* conn){ // 0 -> exi
     char buff[BUFF_LEN];
     ssize_t len;
 
-    sprintf(buff, "r %s\n", userSend->nickname);
+    sprintf(buff, "r [%s]\n", userSend->nickname);
     write(userRecv->socketfd, buff, strlen(buff));
 
     while (1) {
         len = read(userRecv->socketfd, buff, BUFF_LEN);
-        if(len < 0) { // user close socket === recv EXIT
+        if(len <= 0) { // user close socket === recv EXIT
             if(isOpen(conn)){
                 closeConnection(conn);
                 buff[0] = EXIT;

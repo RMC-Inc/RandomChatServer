@@ -33,7 +33,7 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg); // 1 -> contin
 // ---- FUNCTIONS ----
 
 void deleteRoom(RoomVector*, char*);
-void changeNickname(User*, char*);
+int changeNickname(User*, char*); // 1 valid, else 0
 void enterInRoom(User*, unsigned int id, RoomVector*);
 void addRoom(char*, RoomVector*, User*);
 void sendRooms(User*, RoomVector*, char*);
