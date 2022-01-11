@@ -7,7 +7,7 @@
 #include "Finder/finder.h"
 
 
-#define PORT 8080
+#define PORT 8125
 #define BUFF_LEN 500
 
 enum COMMAND{
@@ -34,7 +34,7 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg); // 1 -> contin
 
 void deleteRoom(RoomVector*, char*);
 int changeNickname(User*, char*); // 1 valid, else 0
-void enterInRoom(User*, unsigned int id, RoomVector*);
+void enterInRoom(User*, unsigned int id, RoomVector*, char* buff);
 void addRoom(char*, RoomVector*, User*);
 void sendRooms(User*, RoomVector*, char*);
 

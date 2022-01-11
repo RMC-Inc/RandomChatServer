@@ -17,7 +17,7 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg){
             changeNickname(usr, msg);
             break;
         case ENTER_IN_ROOM:
-            enterInRoom(usr, atoi(msg), vec);
+            enterInRoom(usr, atoi(msg), vec, msg);
             break;
         case NEW_ROOM:
             addRoom(msg, vec, usr);
@@ -56,13 +56,15 @@ int changeNickname(User* user, char* msg){
     return 0;
 }
 
-void enterInRoom(User* user , unsigned int id, RoomVector* vec){
+void enterInRoom(User* user , unsigned int id, RoomVector* vec, char* buff){
 
     printf("[%lu] Try to enter in room #%d.\n", pthread_self(), id);
 
     Room* room = getbyId(vec, id);
     if(room == NULL) {
         printf("[%lu] Error entering in room #%d. Id not valid\n", pthread_self(), id);
+        strcpy(buff, "e\n");
+        write(user->socketfd, buff, 2);
         return;
     }
 
@@ -79,10 +81,13 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec){
         User* user2 = (conn->user1 == user)? conn->user2: conn->user1;
         user->prev_tid = user2->tid;
 
+        printf("[%lu] User found, nick: [%s]\n", pthread_self(), user2->nickname);
         next = startChatting(user, user2, conn);
     } while (next);
 
     printf("[%lu] Exit from room #%d.\n", pthread_self(), id);
+    strcpy(buff, "e\n");
+    write(user->socketfd, buff, 2);
 
     pthread_mutex_lock(&room->mutex);
     room->usersCount--;

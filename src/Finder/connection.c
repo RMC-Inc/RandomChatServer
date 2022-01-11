@@ -5,10 +5,13 @@
 Connection* createConnection(User* user){
     Connection* conn = malloc(sizeof(Connection));
     conn->user1 = user;
+    conn->user2 = NULL;
     conn->status = -1;
     conn->mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
     return conn;
 }
+
+
 void connectUser(Connection* conn, User* user){
     conn->user2 = user;
     conn->status++;

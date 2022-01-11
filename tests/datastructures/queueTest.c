@@ -8,13 +8,13 @@ int main(){
 
     strcpy(u1.nickname, "Utente1");
 
-    UserQueue q;
-    newUserQueue(&q);
+    Queue q;
+    newQueue(&q);
     assert(q.size == 0);
 
     enqueue(&q, &u1);
     assert(q.size == 1);
-    assert(top(q) == &u1);
+    assert(top(&q) == &u1);
 
     assert(&u1 == dequeue(&q));
     assert(q.size == 0);
@@ -25,12 +25,12 @@ int main(){
     enqueue(&q, &u2);
 
     assert(q.size == 2);
-    assert(top(q) == &u1);
+    assert(top(&q) == &u1);
     assert(dequeue(&q) == &u1);
-    assert(top(q) == &u2);
+    assert(top(&q) == &u2);
     assert(q.size == 1);
     enqueue(&q, &u1);
-    assert(top(q) == &u2);
+    assert(top(&q) == &u2);
     assert(dequeue(&q) == &u2);
     assert(dequeue(&q) == &u1);
     assert(q.size == 0);
@@ -45,10 +45,10 @@ int main(){
         assert(dequeue(&q) == &u1);
     }
 
-    assert(top(q) == NULL);
+    assert(top(&q) == NULL);
     assert(dequeue(&q) == NULL);
     assert(q.size == 0);
 
     enqueue(&q, &u1);
-    assert(strcmp("Utente1", top(q)->nickname) == 0);
+    assert(strcmp("Utente1", ((User*) top(&q))->nickname) == 0);
 }

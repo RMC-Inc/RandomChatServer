@@ -99,6 +99,12 @@ void* clientHandler(void* arg){
     // Setting nickname
 
     msglen = recv(user->socketfd, buff, NICK_LEN, 0);
+    if(msglen <= 0){
+        fprintf(stderr, "[t%ld] Error recv nickname Closing connection\n", tid);
+        close(user->socketfd);
+        free(user);
+        pthread_exit(NULL);
+    }
     buff[msglen] = '\0';
 
     if(!changeNickname(user, buff)){
@@ -116,6 +122,10 @@ void* clientHandler(void* arg){
 
     do{
         msglen = recv(user->socketfd, buff, BUFF_LEN, 0);
+        if(msglen <= 0){
+            fprintf(stderr, "[t%ld] Error connection closed by host\n", tid);
+            break;
+        }
         buff[msglen] = '\0';
         printf("[t%ld] Data recived from client: %s\n", tid, buff);
     } while(dispatch(user, roomVector, buff[0], buff+1));

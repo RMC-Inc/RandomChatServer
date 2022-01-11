@@ -9,3 +9,5 @@ find_package(Threads REQUIRED)
 add_subdirectory(src)
 enable_testing()
 add_subdirectory(tests)
+
+install(TARGETS RandomChatServer DESTINATION  /usr/local/bin)
