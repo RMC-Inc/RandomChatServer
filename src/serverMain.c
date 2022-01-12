@@ -89,8 +89,6 @@ void* clientHandler(void* arg){
     ssize_t msglen;
     pthread_t tid = pthread_self();
 
-    signal(SIGPIPE, SIG_IGN); // TODO
-
     printf("[t%ld] Thread started\n", tid);
 
     User* user = (User*) arg;
@@ -115,13 +113,8 @@ void* clientHandler(void* arg){
     }
 
 
-// ----- Sending rooms -----
-
-    //strcpy(buff, "20 []");
-    //sendRooms(user, roomVector, buff); // TODO da rimuovere, questo lo deve richiedere il client. Solo per debug!!
-
     do{
-        msglen = recv(user->socketfd, buff, BUFF_LEN, 0);
+        msglen = recv(user->socketfd, buff, BUFF_LEN, MSG_NOSIGNAL);
         if(msglen <= 0){
             fprintf(stderr, "[t%ld] Error connection closed by host\n", tid);
             break;

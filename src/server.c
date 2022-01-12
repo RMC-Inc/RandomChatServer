@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/socket.h>
 
 #include "FileManagement/fileManager.h"
 
@@ -64,7 +65,7 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec, char* buff){
     if(room == NULL) {
         printf("[%lu] Error entering in room #%d. Id not valid\n", pthread_self(), id);
         strcpy(buff, "e\n");
-        write(user->socketfd, buff, 2);
+        send(user->socketfd, buff, 2, MSG_NOSIGNAL);
         return;
     }
 
@@ -87,7 +88,7 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec, char* buff){
 
     printf("[%lu] Exit from room #%d.\n", pthread_self(), id);
     strcpy(buff, "e\n");
-    write(user->socketfd, buff, 2);
+    send(user->socketfd, buff, 2, MSG_NOSIGNAL);
 
     pthread_mutex_lock(&room->mutex);
     room->usersCount--;
@@ -120,7 +121,7 @@ void addRoom(char* msg, RoomVector* vec, User* user){
     pthread_mutex_unlock(&vec->mutex);
 
     int len = sprintf(msg, "%c %d\n", NEW_ROOM, id);
-    write(user->socketfd, msg, len+1);
+    send(user->socketfd, msg, len+1,MSG_NOSIGNAL);
 }
 
 void sendRooms(User* user, RoomVector* roomVector, char* buff){
@@ -139,9 +140,6 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
 
     if(source->size < size) size = source->size;
 
-    //len = sprintf(buff, "%d\n", size); // how many rooms will be sent
-    //write(user->socketfd, buff, len);
-
     // TODO inviare in ordine decrescente di usercount
 
     char* tmp = buff;
@@ -159,7 +157,7 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
         tmp += len;
     }
     printf("[%lu] Sending rooms to client {\n%s}\n", pthread_self(), buff);
-    write(user->socketfd, buff, tmp-buff);
+    send(user->socketfd, buff, tmp-buff, MSG_NOSIGNAL);
     if (nameLen > 0) deleteVector(search);
 }
 
@@ -168,15 +166,15 @@ int startChatting(User* userRecv, User* userSend, Connection* conn){ // 0 -> exi
     ssize_t len;
 
     sprintf(buff, "r [%s]\n", userSend->nickname);
-    write(userRecv->socketfd, buff, strlen(buff));
+    send(userRecv->socketfd, buff, strlen(buff), MSG_NOSIGNAL);
 
     while (1) {
-        len = read(userRecv->socketfd, buff, BUFF_LEN);
+        len = recv(userRecv->socketfd, buff, BUFF_LEN, MSG_NOSIGNAL);
         if(len <= 0) { // user close socket === recv EXIT
             if(isOpen(conn)){
                 closeConnection(conn);
                 buff[0] = EXIT;
-                write(userSend->socketfd, buff, 1);
+                send(userSend->socketfd, buff, 1, MSG_NOSIGNAL);
             } else closeConnection(conn);
             return 0;
         }
@@ -184,19 +182,19 @@ int startChatting(User* userRecv, User* userSend, Connection* conn){ // 0 -> exi
         switch (buff[0]) {
             case SEND_MSG:
                 if(isOpen(conn)){
-                    write(userSend->socketfd, buff, len);
+                    send(userSend->socketfd, buff, len, MSG_NOSIGNAL);
                 }
                 break;
             case NEXT_USER:
                 if(isOpen(conn)){
                     closeConnection(conn);
-                    write(userSend->socketfd, buff, len);
+                    send(userSend->socketfd, buff, len, MSG_NOSIGNAL);
                 } else closeConnection(conn);
                 return 1;
             case EXIT:
                 if(isOpen(conn)){
                     closeConnection(conn);
-                    write(userSend->socketfd, buff, len);
+                    send(userSend->socketfd, buff, len, MSG_NOSIGNAL);
                 } else closeConnection(conn);
                 return 0;
         }

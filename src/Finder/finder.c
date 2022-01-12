@@ -31,49 +31,51 @@ Connection* find(User* user, Room* room){
         Connection* conn = createConnection(user);
 
         enqueue(&room->waitlist, conn);
-
-        signal(SIGUSR1, signHandler); // todo reset handler
+        __sighandler_t oldHandler = signal(SIGUSR1, signHandler);
 
         pthread_mutex_unlock(&room->mutex);
 
         while (conn->user2 == NULL){
-            fd_set rfdSet; // TODO errorFdSet
-            FD_ZERO(&rfdSet);
-            FD_SET(user->socketfd, &rfdSet);
+            fd_set rfdSet, errfdSet;
+            FD_ZERO(&rfdSet); FD_ZERO(&errfdSet);
+            FD_SET(user->socketfd, &rfdSet); FD_SET(user->socketfd, &errfdSet);
 
-            int retVal = select(user->socketfd + 1, &rfdSet, NULL, NULL, NULL);
+            int retVal = select(user->socketfd + 1, &rfdSet, NULL, &errfdSet, NULL);
             if(retVal >= 0){
+                char buff[10];
+                int terminate = 0;
+
                 if(FD_ISSET(user->socketfd, &rfdSet)){
-                    char buff[10];
-                    unsigned int len = recv(user->socketfd, buff, 10, MSG_DONTWAIT);
+                    unsigned int len = recv(user->socketfd, buff, 10, MSG_DONTWAIT|MSG_NOSIGNAL);
                     if(len > 0){
                         buff[len] = '\0';
                         printf("[%ld][FINDER] Recived message: %s\n", pthread_self(), buff);
-                    }
+                        if(buff[0] == 'e') terminate = 1;
+                    } else terminate = 1;
+                }
 
-                    if(len > 0 && buff[0] == 'e'){
-                        printf("[%ld][FINDER] Try extract connection from waitlist\n", pthread_self());
-                        pthread_mutex_lock(&room->mutex);
-                        void* removeRet = extract(&room->waitlist, conn);
-                        pthread_mutex_unlock(&room->mutex);
+                if(FD_ISSET(user->socketfd, &errfdSet) || terminate){
+                    printf("[%ld][FINDER] Try extract connection from waitlist\n", pthread_self());
+                    pthread_mutex_lock(&room->mutex);
+                    void* removeRet = extract(&room->waitlist, conn);
+                    pthread_mutex_unlock(&room->mutex);
 
-                        if(removeRet == NULL){ // Connection extract by other user
-                            printf("[%ld][FINDER] Connection not found in waitlist closing connection\n", pthread_self());
-                            if(isOpen(conn)){
-                                closeConnection(conn);
-                                buff[1] = '\n';
-                                write(conn->user2->socketfd, buff, 2);
-                            } else closeConnection(conn);
-                        } else {
-                            printf("[%ld][FINDER] Connection removed\n", pthread_self());
-                            free(conn); // double close not necessary
-                        }
-                        return NULL;
+                    if(removeRet == NULL){ // Connection extract by other user
+                        printf("[%ld][FINDER] Connection not found in waitlist closing connection\n", pthread_self());
+                        if(isOpen(conn)){
+                            closeConnection(conn);
+                            buff[1] = '\n';
+                            send(conn->user2->socketfd, buff, 2, MSG_NOSIGNAL);
+                        } else closeConnection(conn);
+                    } else {
+                        printf("[%ld][FINDER] Connection removed\n", pthread_self());
+                        free(conn); // double close not necessary
                     }
+                    return NULL;
                 }
             }
         }
-
+        signal(SIGUSR1, oldHandler);
         return conn;
     } else {
         printf("[%ld][FINDER] Extract user from waitlist\n", pthread_self());
