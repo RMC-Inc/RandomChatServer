@@ -139,14 +139,15 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
 
     if(source->size < size) size = source->size;
 
-    len = sprintf(buff, "%d\n", size); // how many rooms will be sent
-    write(user->socketfd, buff, len);
+    //len = sprintf(buff, "%d\n", size); // how many rooms will be sent
+    //write(user->socketfd, buff, len);
 
     // TODO inviare in ordine decrescente di usercount
 
+    char* tmp = buff;
     for (int i = 0; i < size && size <= source->size; ++i) {
         Room* r = source->rooms[i];
-        len = sprintf(buff, "%d %ld %d.%d.%d %d %d.%d.%d %d [%s]\n",
+        len = sprintf(tmp, "%d %ld %d.%d.%d %d %d.%d.%d %d [%s]\n",
                       r->id,
                       r->usersCount,
                       r->roomColor[0], r->roomColor[1], r->roomColor[2],
@@ -155,9 +156,10 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
                       r->time,
                       r->name
         );
-        printf("[%lu] Sending room to client {%s}", pthread_self(), buff);
-        write(user->socketfd, buff, len);
+        tmp += len;
     }
+    printf("[%lu] Sending rooms to client {\n%s}\n", pthread_self(), buff);
+    write(user->socketfd, buff, tmp-buff);
     if (nameLen > 0) deleteVector(search);
 }
 
