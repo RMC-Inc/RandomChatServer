@@ -117,7 +117,7 @@ void addRoom(char* msg, RoomVector* vec, User* user){
 
 
     pthread_mutex_lock(&vec->mutex);
-    unsigned int id = add(vec, newRoom(name, icon, iconC, roomC, t));
+    unsigned int id = add(vec, newRoom(name, icon, iconC, roomC, t), 1);
     pthread_mutex_unlock(&vec->mutex);
 
     int len = sprintf(msg, "%c %d\n", NEW_ROOM, id);

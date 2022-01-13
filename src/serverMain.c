@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 
 #include "server.h"
+#include "FileManagement/fileManager.h"
 
 
 void* clientHandler(void*);
@@ -18,11 +19,19 @@ int main() {
     roomVector = newVector();
 
     // Todo load rooms
-    Room* r = newRoom("Stanza di prova1", 0, (unsigned char[]) {1 , 2, 4}, (unsigned char[]){1, 2, 4}, 0);
-    add(roomVector, r);
-    r = newRoom("Stanza di prova2", 5000, (unsigned char[]) {255 , 200, 55}, (unsigned char[]){22, 0, 100}, 5);
-    add(roomVector, r);
+    //Room* r = newRoom("Stanza di prova1", 0, (unsigned char[]) {1 , 2, 4}, (unsigned char[]){1, 2, 4}, 0);
+    //add(roomVector, r);
+    //r = newRoom("Stanza di prova2", 5000, (unsigned char[]) {255 , 200, 55}, (unsigned char[]){22, 0, 100}, 5);
+    //add(roomVector, r);
 
+    // a r.g.b icon r.g.b t [roomname]
+    // a 255.0.0 500 0.100.100 0 [Stanza di prova1]
+    // a 0.255.0 500 100.0.100 0 [Stanza di prova2]
+    // a 0.0.255 500 100.100.0 100 [Stanza di prova3]
+
+    loadFromFile(roomVector, "rooms.rc");
+
+    startAutoSave(roomVector, "rooms.rc", 60 * 5);
 
 // ----- Starting server -----
     int server, client;

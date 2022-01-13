@@ -5,7 +5,7 @@ EXPOSE 8125:8125
 
 COPY . /home
 WORKDIR /home
-RUN cmake cmake .
+RUN cmake make .
 RUN make
 RUN make install
 ENTRYPOINT ["RandomChatServer"]

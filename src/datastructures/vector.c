@@ -67,8 +67,8 @@ unsigned int nextAvailableId(RoomVector* vec){ // private
     return id;
 }
 
-unsigned int add(RoomVector* vec, Room* room){
-    room->id = nextAvailableId(vec);
+unsigned int add(RoomVector* vec, Room* room, int autoId){
+    if(autoId) room->id = nextAvailableId(vec);
     vec->rooms[vec->size++] = room;
     insertionSort(vec);
     Expand(vec);
@@ -128,7 +128,7 @@ RoomVector* searchByName(RoomVector* in, char* name){
         strcpy(roomName, in->rooms[i]->name);
         strLowercase(roomName);
         if(strstr(roomName, name)){
-            add(out, in->rooms[i]);
+            add(out, in->rooms[i], 0);
         }
     }
 

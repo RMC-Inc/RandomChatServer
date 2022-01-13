@@ -26,7 +26,7 @@ void freeRooms(RoomVector*); // Static destructor
 RoomVector* newVector(); // Dynamic Default constructor
 void deleteVector(RoomVector*); // Dynamic destructor
 
-unsigned int add(RoomVector*, Room*);
+unsigned int add(RoomVector*, Room*, int autoId);
 Room* removeFrom(RoomVector*, unsigned int);
 
 // *** Specific RoomVector functions ***
