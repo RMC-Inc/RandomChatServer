@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/socket.h>
+#include <errno.h>
 
 #include "FileManagement/fileManager.h"
 
@@ -171,6 +171,7 @@ int startChatting(User* userRecv, User* userSend, Connection* conn){ // 0 -> exi
     while (1) {
         len = recv(userRecv->socketfd, buff, BUFF_LEN, MSG_NOSIGNAL);
         if(len <= 0) { // user close socket === recv EXIT
+            if(errno == EINTR) continue;
             if(isOpen(conn)){
                 closeConnection(conn);
                 buff[0] = EXIT;

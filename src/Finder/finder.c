@@ -1,69 +1,72 @@
 #include "finder.h"
 #include <unistd.h>
 #include <stdlib.h>
-
-#include <signal.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <stdio.h>
-
+#include <errno.h>
 #include <pthread.h>
-
-
-// TODO free connection
 
 
 // *** Finder ***
 
-void signHandler(int sig){ return; }
-
-Connection* find(User* user, Room* room){
+Connection* find(User* user, Room* room) {
     pthread_mutex_lock(&room->mutex);
 
     pthread_t tid = -1;
-    if(room->waitlist.size != 0){
-        tid = ((Connection*) top(&room->waitlist))->user1->tid;
+    if (room->waitlist.size != 0) {
+        tid = ((Connection *) top(&room->waitlist))->user1->tid;
     }
     printf("[%ld][FINDER] Queue Size: %d\n", pthread_self(), room->waitlist.size);
-    if(room->waitlist.size == 0 ||
-    (tid != -1 && pthread_equal(user->prev_tid, tid))){
+    if (room->waitlist.size == 0 ||
+        (tid != -1 && pthread_equal(user->prev_tid, tid))) {
         printf("[%ld][FINDER] Enter in waitlist\n", pthread_self());
-        Connection* conn = createConnection(user);
+        Connection *conn = createConnection(user);
 
         enqueue(&room->waitlist, conn);
-        __sighandler_t oldHandler = signal(SIGUSR1, signHandler);
 
         pthread_mutex_unlock(&room->mutex);
 
-        while (conn->user2 == NULL){
+        while (conn->user2 == NULL) {
             fd_set rfdSet, errfdSet;
-            FD_ZERO(&rfdSet); FD_ZERO(&errfdSet);
-            FD_SET(user->socketfd, &rfdSet); FD_SET(user->socketfd, &errfdSet);
+            FD_ZERO(&rfdSet);
+            FD_ZERO(&errfdSet);
+            FD_SET(user->socketfd, &rfdSet);
+            FD_SET(user->socketfd, &errfdSet);
+            FD_SET(conn->pipefd[0], &rfdSet);
 
-            int retVal = select(user->socketfd + 1, &rfdSet, NULL, &errfdSet, NULL);
-            if(retVal >= 0){
+            int retVal = select(((user->socketfd > conn->pipefd[0]) ? user->socketfd : conn->pipefd[0]) + 1, &rfdSet,
+                                NULL, &errfdSet, NULL);
+            if (retVal >= 0) {
                 char buff[10];
                 int terminate = 0;
 
-                if(FD_ISSET(user->socketfd, &rfdSet)){
-                    unsigned int len = recv(user->socketfd, buff, 10, MSG_DONTWAIT|MSG_NOSIGNAL);
-                    if(len > 0){
-                        buff[len] = '\0';
-                        printf("[%ld][FINDER] Recived message: %s\n", pthread_self(), buff);
-                        if(buff[0] == 'e') terminate = 1;
-                    } else terminate = 1;
+                if (FD_ISSET(conn->pipefd[0], &rfdSet)) {
+                    char c;
+                    read(conn->pipefd[1], &c, 1);
+                    continue;
                 }
 
-                if(FD_ISSET(user->socketfd, &errfdSet) || terminate){
+                if (FD_ISSET(user->socketfd, &rfdSet)) {
+                    unsigned int len = recv(user->socketfd, buff, 10, MSG_DONTWAIT | MSG_NOSIGNAL);
+                    if (len > 0) {
+                        buff[len] = '\0';
+                        printf("[%ld][FINDER] Recived message: %s\n", pthread_self(), buff);
+                        if (buff[0] == 'e') terminate = 1;
+                    } else if (errno != EINTR) terminate = 1;
+                }
+
+                if (FD_ISSET(user->socketfd, &errfdSet) || terminate) {
                     printf("[%ld][FINDER] Try extract connection from waitlist\n", pthread_self());
                     pthread_mutex_lock(&room->mutex);
-                    void* removeRet = extract(&room->waitlist, conn);
+                    void *removeRet = extract(&room->waitlist, conn);
                     pthread_mutex_unlock(&room->mutex);
 
-                    if(removeRet == NULL){ // Connection extract by other user
+                    if (removeRet == NULL) { // Connection extract by other user
                         printf("[%ld][FINDER] Connection not found in waitlist closing connection\n", pthread_self());
-                        if(isOpen(conn)){
+                        if (isOpen(conn)) {
                             closeConnection(conn);
+                            buff[0] = 'e';
                             buff[1] = '\n';
                             send(conn->user2->socketfd, buff, 2, MSG_NOSIGNAL);
                         } else closeConnection(conn);
@@ -75,31 +78,13 @@ Connection* find(User* user, Room* room){
                 }
             }
         }
-        signal(SIGUSR1, oldHandler);
         return conn;
     } else {
         printf("[%ld][FINDER] Extract user from waitlist\n", pthread_self());
-        Connection* conn = (Connection*) dequeue(&room->waitlist);
+        Connection *conn = (Connection *) dequeue(&room->waitlist);
         connectUser(conn, user);
-
-        pthread_kill(conn->user1->tid, SIGUSR1);
-
         pthread_mutex_unlock(&room->mutex);
 
         return conn;
     }
 }
-
-/*
- * Room contiene una waitlist di connection
- *
- * utente chiama find
- *      mutex
- *      se waitlist è vuota || il top è l'utente precedente Crea una connessione e la mette in waitlist rilascia il mutex, pause()
- *      se non è vuota
- *          estrae l'utente dalla waitlis, setta connection e usa kill per avvertirlo
- *          rilascia il mutex return connection
- *      dopo il pause se connection is open return connection
- *
- *
- * **/

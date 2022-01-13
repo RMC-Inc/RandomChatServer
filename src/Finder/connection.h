@@ -11,6 +11,7 @@ typedef struct {
 
     int status;
     pthread_mutex_t mutex;
+    int pipefd[2];
 } Connection;
 
 Connection* createConnection(User*);

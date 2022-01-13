@@ -1,5 +1,7 @@
 #include "connection.h"
 #include <stdlib.h>
+#include <unistd.h>
+
 
 
 Connection* createConnection(User* user){
@@ -8,6 +10,7 @@ Connection* createConnection(User* user){
     conn->user2 = NULL;
     conn->status = -1;
     conn->mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
+    pipe(conn->pipefd);
     return conn;
 }
 
@@ -15,6 +18,8 @@ Connection* createConnection(User* user){
 void connectUser(Connection* conn, User* user){
     conn->user2 = user;
     conn->status++;
+    char c = 'c';
+    write(conn->pipefd[1], &c, 1);
 }
 
 void closeConnection(Connection* conn){
@@ -22,7 +27,11 @@ void closeConnection(Connection* conn){
     conn->status++;
     pthread_mutex_unlock(&conn->mutex);
 
-    if(conn->status == 2) free(conn);
+    if(conn->status == 2) {
+        close(conn->pipefd[0]);
+        close(conn->pipefd[1]);
+        free(conn);
+    }
 }
 
 int isOpen(const Connection* conn){

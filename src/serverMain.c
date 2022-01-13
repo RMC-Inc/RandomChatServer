@@ -6,7 +6,6 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <signal.h>
 
 #include "server.h"
 
@@ -98,7 +97,7 @@ void* clientHandler(void* arg){
 
     msglen = recv(user->socketfd, buff, NICK_LEN, 0);
     if(msglen <= 0){
-        fprintf(stderr, "[t%ld] Error recv nickname Closing connection\n", tid);
+        fprintf(stderr, "[t%ld] Error recv nickname Closing connection\n", tid); perror(errno);
         close(user->socketfd);
         free(user);
         pthread_exit(NULL);
@@ -107,7 +106,9 @@ void* clientHandler(void* arg){
 
     if(!changeNickname(user, buff)){
         fprintf(stderr, "[t%ld] Invalid nickname, closing connection.\n", tid);
-        close(user->socketfd);
+        if(close(user->socketfd) < 0){
+            perror("Error Closing connection.\n"); perror(errno);
+        }
         free(user);
         pthread_exit(NULL);
     }
@@ -116,7 +117,8 @@ void* clientHandler(void* arg){
     do{
         msglen = recv(user->socketfd, buff, BUFF_LEN, MSG_NOSIGNAL);
         if(msglen <= 0){
-            fprintf(stderr, "[t%ld] Error connection closed by host\n", tid);
+            if(errno == EINTR) continue;
+            fprintf(stderr, "[t%ld] Error connection closed by client\n", tid); perror(errno);
             break;
         }
         buff[msglen] = '\0';
@@ -124,7 +126,9 @@ void* clientHandler(void* arg){
     } while(dispatch(user, roomVector, buff[0], buff+1));
 
     printf("[t%ld] Closing connection\n", tid);
-    close(user->socketfd);
+    if(close(user->socketfd) < 0){
+        perror("Error Closing connection.\n"); perror(errno);
+    }
     free(user);
     pthread_exit(NULL);
 }
