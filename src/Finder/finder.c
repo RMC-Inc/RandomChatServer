@@ -19,7 +19,7 @@ Connection* find(User* user, Room* room) {
     }
     printf("[%ld][FINDER] Queue Size: %d\n", pthread_self(), room->waitlist.size);
     if (room->waitlist.size == 0 ||
-        (tid != -1 && pthread_equal(user->prev_tid, tid))) {
+        (tid != -1 && pthread_equal(user->prev_tid, tid))) { // TODO deve vedere se c'è qualcuno dopo al top
         printf("[%ld][FINDER] Enter in waitlist\n", pthread_self());
         Connection *conn = createConnection(user);
 
@@ -35,15 +35,15 @@ Connection* find(User* user, Room* room) {
             FD_SET(user->socketfd, &errfdSet);
             FD_SET(conn->pipefd[0], &rfdSet);
 
-            int retVal = select(((user->socketfd > conn->pipefd[0]) ? user->socketfd : conn->pipefd[0]) + 1, &rfdSet,
-                                NULL, &errfdSet, NULL);
+            int retVal = select(((user->socketfd > conn->pipefd[0]) ? user->socketfd : conn->pipefd[0]) + 1,
+                                &rfdSet,NULL, &errfdSet, NULL);
             if (retVal >= 0) {
                 char buff[10];
                 int terminate = 0;
 
                 if (FD_ISSET(conn->pipefd[0], &rfdSet)) {
                     char c;
-                    read(conn->pipefd[1], &c, 1);
+                    read(conn->pipefd[0], &c, 1);
                     continue;
                 }
 
@@ -72,11 +72,18 @@ Connection* find(User* user, Room* room) {
                         } else closeConnection(conn);
                     } else {
                         printf("[%ld][FINDER] Connection removed\n", pthread_self());
-                        free(conn); // double close not necessary
+                        closeConnection(conn); closeConnection(conn);
                     }
                     return NULL;
                 }
             }
+        }
+        char c;
+        while (read(conn->pipefd[0], &c, 1) != -1);
+
+        if(room->time > 0){
+            setConnectionTimeout(conn, room->time);
+            startTimer(conn->timer);
         }
         return conn;
     } else {

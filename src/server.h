@@ -23,6 +23,8 @@ enum COMMAND{
     NEXT_USER = 'n',
     SEND_MSG = 'm',
 
+    TIME_EXPIRED = 't',
+
     EXIT = 'e',
 };
 

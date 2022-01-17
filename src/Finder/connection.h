@@ -1,8 +1,9 @@
 #ifndef RANDOMCHATSERVER_CONNECTION_H
 #define RANDOMCHATSERVER_CONNECTION_H
+#include <pthread.h>
 
 #include "../datastructures/entity/user.h"
-#include <pthread.h>
+#include "../Timer/timer.h"
 
 // *** Connection ***
 typedef struct {
@@ -12,9 +13,11 @@ typedef struct {
     int status;
     pthread_mutex_t mutex;
     int pipefd[2];
+    Timer* timer;
 } Connection;
 
 Connection* createConnection(User*);
+void setConnectionTimeout(Connection*, unsigned int timeout);
 void connectUser(Connection*, User*);
 void closeConnection(Connection*);
 int isOpen(const Connection*);

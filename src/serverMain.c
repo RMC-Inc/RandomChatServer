@@ -18,7 +18,6 @@ int main() {
 // ----- Load rooms from file -----
     roomVector = newVector();
 
-    // Todo load rooms
     //Room* r = newRoom("Stanza di prova1", 0, (unsigned char[]) {1 , 2, 4}, (unsigned char[]){1, 2, 4}, 0);
     //add(roomVector, r);
     //r = newRoom("Stanza di prova2", 5000, (unsigned char[]) {255 , 200, 55}, (unsigned char[]){22, 0, 100}, 5);

@@ -5,6 +5,8 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <sys/select.h>
+#include <unistd.h>
 
 #include "FileManagement/fileManager.h"
 
@@ -168,36 +170,61 @@ int startChatting(User* userRecv, User* userSend, Connection* conn){ // 0 -> exi
     sprintf(buff, "r [%s]\n", userSend->nickname);
     send(userRecv->socketfd, buff, strlen(buff), MSG_NOSIGNAL);
 
+
+    int timeExpired = 0;
     while (1) {
-        len = recv(userRecv->socketfd, buff, BUFF_LEN, MSG_NOSIGNAL);
-        if(len <= 0) { // user close socket === recv EXIT
-            if(errno == EINTR) continue;
-            if(isOpen(conn)){
-                closeConnection(conn);
-                buff[0] = EXIT;
-                send(userSend->socketfd, buff, 1, MSG_NOSIGNAL);
-            } else closeConnection(conn);
-            return 0;
+        fd_set rfdSet, errfdSet;
+        FD_SET(userRecv->socketfd, &rfdSet); FD_SET(userRecv->socketfd, &errfdSet);
+
+        if(!isOpen(conn))
+            len = select(userRecv->socketfd + 1, &rfdSet, NULL, &errfdSet, NULL);
+        else {
+            FD_SET(conn->pipefd[0], &rfdSet);
+            len = select(((userRecv->socketfd > conn->pipefd[0])? userRecv->socketfd: conn->pipefd[0]) + 1, &rfdSet, NULL, &errfdSet, NULL);
+        }
+        if(len >= 0){
+
+            if(!timeExpired && FD_ISSET(conn->pipefd[0], &rfdSet)){ // timer expired
+                printf("[%ld] Time expired", pthread_self());
+                buff[0] = TIME_EXPIRED;
+                buff[1] = '\n';
+                send(userRecv->socketfd, buff, 2, MSG_NOSIGNAL);
+                timeExpired = 1;
+            }
+
+            if(FD_ISSET(userRecv->socketfd, &rfdSet) || FD_ISSET(userRecv->socketfd, &errfdSet)){
+                len = recv(userRecv->socketfd, buff, BUFF_LEN, MSG_NOSIGNAL);
+                if(len <= 0) { // user close socket === recv EXIT
+                    if(errno == EINTR) continue;
+                    if(isOpen(conn)){
+                        closeConnection(conn);
+                        buff[0] = EXIT;
+                        send(userSend->socketfd, buff, 1, MSG_NOSIGNAL);
+                    } else closeConnection(conn);
+                    return 0;
+                }
+
+                switch (buff[0]) {
+                    case SEND_MSG:
+                        if(isOpen(conn)){
+                            send(userSend->socketfd, buff, len, MSG_NOSIGNAL);
+                        }
+                        break;
+                    case NEXT_USER:
+                        if(isOpen(conn)){
+                            closeConnection(conn);
+                            send(userSend->socketfd, buff, len, MSG_NOSIGNAL);
+                        } else closeConnection(conn);
+                        return 1;
+                    case EXIT:
+                        if(isOpen(conn)){
+                            closeConnection(conn);
+                            send(userSend->socketfd, buff, len, MSG_NOSIGNAL);
+                        } else closeConnection(conn);
+                        return 0;
+                }
+            }
         }
 
-        switch (buff[0]) {
-            case SEND_MSG:
-                if(isOpen(conn)){
-                    send(userSend->socketfd, buff, len, MSG_NOSIGNAL);
-                }
-                break;
-            case NEXT_USER:
-                if(isOpen(conn)){
-                    closeConnection(conn);
-                    send(userSend->socketfd, buff, len, MSG_NOSIGNAL);
-                } else closeConnection(conn);
-                return 1;
-            case EXIT:
-                if(isOpen(conn)){
-                    closeConnection(conn);
-                    send(userSend->socketfd, buff, len, MSG_NOSIGNAL);
-                } else closeConnection(conn);
-                return 0;
-        }
     }
 }
