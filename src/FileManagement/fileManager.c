@@ -42,8 +42,17 @@ void loadFromFile(RoomVector* vec, const char* filename){
                     &time
             );
             stringInside(roomStr, '[', ']', name);
-
-            Room* room = newRoom(name, icon, (unsigned char*) iconColor, (unsigned char*) roomColor, time);
+            printf("Adding room: %d %d.%d.%d %d %d.%d.%d %d [%s]\n",
+                    id,
+                    roomColor[0], roomColor[1], roomColor[2],
+                    icon,
+                    iconColor[0], iconColor[1], iconColor[2],
+                    time,
+                    name
+            );
+            unsigned char iColor[3] = {(unsigned char) iconColor[0], (unsigned char) iconColor[1], (unsigned char) iconColor[2]};
+            unsigned char rColor[3] = {(unsigned char) roomColor[0], (unsigned char) roomColor[1], (unsigned char) roomColor[2]};
+            Room* room = newRoom(name, icon, iColor, rColor, time);
             room->id = id;
             add(vec, room, 0);
         }
