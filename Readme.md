@@ -54,6 +54,7 @@ Il server utilizza la codifica dei caratteri ASCII.
 I comandi interpretabili dal server sono:
 
 
+- **CHANGE_NICKNAME** = 099 ('c')
 - ***ENTER_IN_ROOM*** = 114 ('r')
 - ***NEW_ROOM*** = 097 ('a')
 - ***ROOM_LIST*** = 108 ('l')
@@ -61,11 +62,14 @@ I comandi interpretabili dal server sono:
 
 - ***NEXT_USER*** = 110 ('n')
 - ***SEND_MSG*** = 109 ('m')
+- **TIME_EXPIRED** = 116 ('t')
 
 
 - ***EXIT*** = 101 ('e')
 
 Per eseguire i comandi il client deve essere loggato (vedi sezione sotto).
+
+Il comando **CHANGE_NICKNAME** permete di cambiare nickname.
 
 Il comando ***ENTER_IN_ROOM*** permete di entrare in una stanza.
 
@@ -81,6 +85,8 @@ Il comando ***SEND_MSG*** serve a mandare un messaggio testuale all'utente accop
 Quesi ultimi 2 comandi non sono utilizzabili se il client non è entrato in una stanza e se inviati il server chiuderà la connessione.
 Viceversa i primi 3 non sono utilizzabili se il client è entrato in una stanza.
 
+Il comando **TIME_EXPIRED** viene inviato al client quando è terminato il tempo per una chat in una stanza temporizzata.
+
 Il comando ***EXIT*** termina la connessione.
 
 
@@ -92,28 +98,29 @@ Per 'comandi' si intendono caratteri, ad esempio il comando ***EXIT*** rappresen
 
 ### Login
 Una volta stabilita la connessione il server si mette in attesa per ricevere il nickname
-del client. Una volta ricevuto il nickname il server invierà una lista di stanze al client.
+del client.
 
-Il nickname è associato al client per tutta la durata della connessione.
-Per cambiare nickname è necessario chiudere e riaprire la connessione. 
-Il nickname è una stringa di massimo 20 caratteri e può contenere spazi e caratteri speciali. Più client possono avere stesso nickname.
+Il nickname è una stringa di massimo 20 caratteri e può contenere spazi e caratteri speciali tranne '[' e ']'. Più client possono avere stesso nickname.
 
 > #### Esempio
 > Si assuma che il client voglia impostare `John` come proprio nickname.
 > 
-> Allora è sufficiente inviare la stringa `John` dopo aver stabilito la connessione.
+> Allora è sufficiente inviare la stringa `CHANGE_NICKNAME [John]` o solo `[John]` dopo aver stabilito la connessione.
+> 
+> Per cambiare il nickname in seguito il prefisso CHANGE_NICKNAME è necessario 
 
 ### Entrare in una stanza
 Per entrare in una stanza il client deve essere loggato e deve conoscere l'id della stanza
-nella quale vuole accedere. Per uscire da una stanza il client deve terminare la connessione tramite
-il comando ***EXIT*** o chiudendo il socket di comunicazione. Una volta entrati il server
+nella quale vuole accedere. Per uscire da una stanza il client deve inviare il comando ***EXIT*** o chiudendo il socket di comunicazione. Una volta entrati il server
 cercherà un altro utente con cui chattare. Una volta che si è stati accoppiati è possibile inviare il comando ***NEXT_USER*** 
 per chiudere la chat e cercare un altro utente con cui chattare oppure usare il comando ***SEND_MSG*** per inviare un messaggio.
 
 Quando il server trova un altro utente invia un messaggio di conferma con il formato 
 `ENTER_IN_ROOM nickname` dove nickname rappresenta il nickname dell'altro utente.
 
-Se la stanza è temporizzata il server invierà ai 2 client un messaggio di ***NEXT_USER*** al termine del tempo.
+Se la stanza è temporizzata il server invierà ai 2 client un messaggio di **TIME_EXPIRED** al termine del tempo.
+
+Durante la ricerca di un altro utente se si invia il comando ***EXIT*** si ritornerà alla lista delle stanze. Il erver per conferma invierà un ***EXIT*** al client.
 
 > #### Esempio
 > Si assuma di voler entrare nella stanza con id *#1234* e che il server vi accoppi con l'utente di nome John.
@@ -173,19 +180,21 @@ reperibili a questo [link](https://github.com/google/material-design-icons).
 > Quindi il verde sarà 0.255.0.
 > 
 > Per creare una nuova stanza basta inviare al server una stringa con il seguente formato
-> `NEW_ROOM 'room_name' icon r.g.b r.g.b time` dove il primo parametro rgb rappresenta il colore dell'icona e il secondo il colore della stanza.
+> `NEW_ROOM r.g.b icon r.g.b time [roomName]` dove il primo parametro rgb rappresenta il colore della stanza e il secondo il colore dell'icona.
 > 
 > La stanza di esempio va creata quindi con la stringa
-> `NEW_ROOM 'Studenti di informatica' 58122 238.238.238 0.255.0 0`
+> `NEW_ROOM 238.238.238 58122 0.255.0 0 'Studenti di informatica'`
 
 ### Lista delle stanze
-Per il momento il server invia tutte le stanze disponibili al client
-ma questa cosa è da rivedere.
+Con il comando ***ROOM_LIST*** è possibile ricevere una lista delle stanze ed effettuare una ricerca. Il client deve specificare quante stanze vuole ricevere.
+
 
 > #### Esempio
-> Per ricevere la lista delle stanze dal server inviare il comando `ROOM_LIST`
+> Per ricevere la lista delle stanze dal server inviare il comando `ROOM_LIST 0 10 []`.
+> Il server invierà massimo 11 stanze al client con indici da 0 a 11. La lista delle stanze è ordinata per numero di utenti presenti nella stanza.
+> Gli indici sono determinati da quanti utenti sono presenti nella stanza.
 > 
-> Il server risponderà con un intero n che rapresenta il numero di stanze da inviare
-> seguito da n invii (ogni invio rappresenta una stanza).
+> Per effettuare una ricerca basta scrivere la stringa tra le parentesi quadre `ROOM_LIST 0 10 [Ricerca]`. Questo comando elencherà massimo
+> 11 stanze nel nome contengono la stringa "Ricerca" (La ricerca è case insensitive)
 > 
-> Ogni stanza arriva con il formato `'room_name' icon r.g.b r.g.b time`
+> Ogni stanza arriva con il formato `id usersCout r.g.b icon r.g.b time [name]`
