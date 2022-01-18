@@ -17,6 +17,8 @@ RoomVector*  roomVector;
 int main() {
 // ----- Load rooms from file -----
     roomVector = newVector();
+    int sortById(Room*, Room*);
+    sortBy(roomVector, sortById);
 
     //Room* r = newRoom("Stanza di prova1", 0, (unsigned char[]) {1 , 2, 4}, (unsigned char[]){1, 2, 4}, 0);
     //add(roomVector, r);
@@ -139,4 +141,8 @@ void* clientHandler(void* arg){
     }
     free(user);
     pthread_exit(NULL);
+}
+
+int sortById(Room* a, Room* b){
+    return a->id < b->id;
 }

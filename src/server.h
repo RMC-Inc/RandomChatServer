@@ -15,7 +15,7 @@ enum COMMAND{
     CHANGE_NICKNAME = 'c', // usage: c [new_nick]
     ENTER_IN_ROOM = 'r',
     NEW_ROOM = 'a', // msg pattern: r.g.b icon r.g.b t [roomname]
-    ROOM_LIST = 'l', // input: l size [name]
+    ROOM_LIST = 'l', // input: l start end [name]
     // msg pattern: id usercount r.g.b icon r.g.b t [roomname]
 
     // ---- From ChatController ----

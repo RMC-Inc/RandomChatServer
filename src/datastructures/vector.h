@@ -16,6 +16,8 @@ typedef struct {
     Room** rooms;
 
     pthread_mutex_t mutex;
+
+    int (*sortfun)(Room*, Room*);
 } RoomVector;
 
 // *** Generics Vector functions ***
@@ -25,6 +27,8 @@ void freeRooms(RoomVector*); // Static destructor
 
 RoomVector* newVector(); // Dynamic Default constructor
 void deleteVector(RoomVector*); // Dynamic destructor
+
+void sortBy(RoomVector*, int (*sortFun)(Room*, Room*));
 
 unsigned int add(RoomVector*, Room*, int autoId);
 Room* removeFrom(RoomVector*, unsigned int);
@@ -36,6 +40,8 @@ Room* getbyId(RoomVector*, unsigned int);
 Room* removeById(RoomVector*, unsigned int);
 
 RoomVector* searchByName(RoomVector*, char*); // Must be deleted
+
+RoomVector* RoomVectorCopy(RoomVector*);
 
 
 #endif //RANDOMCHATSERVER_VECTOR_H

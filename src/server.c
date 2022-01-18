@@ -116,39 +116,42 @@ void addRoom(char* msg, RoomVector* vec, User* user){
 
 void sendRooms(User* user, RoomVector* roomVector, char* buff){
 
-    unsigned int size;
-    sscanf(buff, "%d", &size);
+    unsigned int from = 0, to = (roomVector->size == 0)? 0: (roomVector->size - 1);
+    sscanf(buff, "%d %d", &from, &to);
 
-    int len;
+    ssize_t len;
     char name[ROOM_NAME_LEN];
     int nameLen = stringInside(buff, '[', ']', name);
 
-    RoomVector* search;
-    if(nameLen > 0)
-        search = searchByName(roomVector, name);
-    RoomVector* source = (nameLen > 0)? search: roomVector;
+    RoomVector* source = (nameLen > 0)? searchByName(roomVector, name): RoomVectorCopy(roomVector);
 
-    if(source->size < size) size = source->size;
+    int sortByUsercount(Room*, Room*);
+    sortBy(source, sortByUsercount);
 
-    // TODO inviare in ordine decrescente di usercount
-
-    char* tmp = buff;
-    for (int i = 0; i < size && size <= source->size; ++i) {
-        Room* r = source->rooms[i];
-        len = sprintf(tmp, "%d %ld %d.%d.%d %d %d.%d.%d %d [%s]\n",
-                      r->id,
-                      r->usersCount,
-                      r->roomColor[0], r->roomColor[1], r->roomColor[2],
-                      r->icon,
-                      r->iconColor[0], r->iconColor[1], r->iconColor[2],
-                      r->time,
-                      r->name
-        );
-        tmp += len;
+    if(source->size != 0){
+        printf("[%lu] Sending rooms to client: {\n", pthread_self());
+        for (; from <= to && from < source->size; ++from) {
+            Room* r = source->rooms[from];
+            len = sprintf(buff, "%c %d %ld %d.%d.%d %d %d.%d.%d %d [%s]\n", ROOM_LIST,
+                          r->id,
+                          r->usersCount,
+                          r->roomColor[0], r->roomColor[1], r->roomColor[2],
+                          r->icon,
+                          r->iconColor[0], r->iconColor[1], r->iconColor[2],
+                          r->time,
+                          r->name
+            );
+            len = send(user->socketfd, buff, len, MSG_NOSIGNAL);
+            if(len < 0 && errno != EINTR) break;
+            printf("[%lu] %s", pthread_self(), buff);
+        }
+        printf("[%lu] }\n", pthread_self());
     }
-    printf("[%lu] Sending rooms to client {\n%s}\n", pthread_self(), buff);
-    send(user->socketfd, buff, tmp-buff, MSG_NOSIGNAL);
-    if (nameLen > 0) deleteVector(search);
+    deleteVector(source);
+}
+
+int sortByUsercount(Room* a, Room* b){
+    return a->usersCount > b->usersCount;
 }
 
 int startChatting(User* userRecv, User* userSend, Connection* conn){ // 0 -> exit; 1 -> next user

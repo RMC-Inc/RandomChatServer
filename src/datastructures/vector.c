@@ -45,16 +45,23 @@ void deleteVector(RoomVector* vec){
 }
 
 
+
+
 void insertionSort(RoomVector* v){ // private
     for (unsigned int i = 1; i < v->size; ++i) {
         unsigned int j = i;
-        while (j > 0 && v->rooms[j]->id < v->rooms[j-1]->id){
+        while (j > 0 && v->sortfun(v->rooms[j], v->rooms[j-1])){
             Room* tmp = v->rooms[j];
             v->rooms[j] = v->rooms[j-1];
             v->rooms[j-1] = tmp;
             j--;
         }
     }
+}
+
+void sortBy(RoomVector* vec, int (*sortFun)(Room*, Room*)){
+    vec->sortfun = sortFun;
+    insertionSort(vec);
 }
 
 unsigned int nextAvailableId(RoomVector* vec){ // private
@@ -134,6 +141,20 @@ RoomVector* searchByName(RoomVector* in, char* name){
 
     return out;
 }
+
+
+RoomVector* RoomVectorCopy(RoomVector* v){
+    RoomVector* cp = malloc(sizeof(RoomVector));
+    cp->rooms = malloc(v->realSize * sizeof(Room*));
+    memcpy(cp->rooms, v->rooms, v->size * sizeof(Room*));
+
+    cp->size = v->size;
+    cp->realSize = v->realSize;
+    cp->sortfun = v->sortfun;
+    cp->mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
+    return cp;
+}
+
 
 
 
