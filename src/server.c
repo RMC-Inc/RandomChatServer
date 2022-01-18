@@ -5,17 +5,12 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <errno.h>
-#include <sys/select.h>
-#include <unistd.h>
 
 #include "FileManagement/fileManager.h"
 
 
 int dispatch(User* usr, RoomVector* vec, int command, char* msg){
     switch (command) {
-        case DELETE_ROOM:
-            deleteRoom(vec, msg);
-            break;
         case CHANGE_NICKNAME:
             changeNickname(usr, msg);
             break;
@@ -35,13 +30,6 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg){
             return 0;
     }
     return 1;
-}
-
-
-void deleteRoom(RoomVector* vec, char* msg){ //TODO
-    int roomId;
-    sscanf(msg, "%d", &roomId);
-    printf("Debug room id: %d\n", roomId);
 }
 
 int changeNickname(User* user, char* msg){
@@ -82,7 +70,7 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec, char* buff){
         if(conn == NULL) break;
 
         User* user2 = (conn->user1 == user)? conn->user2: conn->user1;
-        user->prev_tid = user2->tid;
+        user->prevUser = user2;
 
         printf("[%lu] User found, nick: [%s]\n", pthread_self(), user2->nickname);
         next = startChatting(user, user2, conn);

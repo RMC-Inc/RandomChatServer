@@ -12,7 +12,6 @@
 
 enum COMMAND{
     // ---- From RoomController ----
-    DELETE_ROOM = 'd', //usage: d room_id
     CHANGE_NICKNAME = 'c', // usage: c [new_nick]
     ENTER_IN_ROOM = 'r',
     NEW_ROOM = 'a', // msg pattern: r.g.b icon r.g.b t [roomname]
@@ -34,7 +33,6 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg); // 1 -> contin
 
 // ---- FUNCTIONS ----
 
-void deleteRoom(RoomVector*, char*);
 int changeNickname(User*, char*); // 1 valid, else 0
 void enterInRoom(User*, unsigned int id, RoomVector*, char* buff);
 void addRoom(char*, RoomVector*, User*);

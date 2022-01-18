@@ -47,7 +47,7 @@ void* dequeue(Queue* queue){
 
 void* extract(Queue* queue, void* data){
     if(queue->size != 0){
-        if(data == top(queue)){
+        if(data == queue->front->data){
             return dequeue(queue);
         } else {
             struct QueueNode* tmp = queue->front;

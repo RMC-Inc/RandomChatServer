@@ -15,7 +15,7 @@ typedef struct USR{
     int socketfd;
     pthread_t tid;
 
-    pthread_t prev_tid;
+    struct USR* prevUser;
 } User;
 
 #endif //RANDOMCHATSERVER_USER_H

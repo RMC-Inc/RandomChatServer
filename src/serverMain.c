@@ -77,7 +77,7 @@ int main() {
 
         User* user = malloc(sizeof(User));
         user->socketfd = client;
-        user->prev_tid = -1;
+        user->prevUser = NULL;
 
         pthread_create(&tid, NULL, clientHandler, (void*) user);
         pthread_detach(tid);

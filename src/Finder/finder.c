@@ -1,7 +1,6 @@
 #include "finder.h"
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/select.h>
 #include <sys/socket.h>
 #include <stdio.h>
 #include <errno.h>
@@ -13,13 +12,19 @@
 Connection* find(User* user, Room* room) {
     pthread_mutex_lock(&room->mutex);
 
-    pthread_t tid = -1;
-    if (room->waitlist.size != 0) {
-        tid = ((Connection *) top(&room->waitlist))->user1->tid;
+    Connection* firstValidConnection = NULL;
+    struct QueueNode* tmp = room->waitlist.front;
+
+    while (tmp != NULL && firstValidConnection == NULL){
+        Connection* curr = ((Connection*) tmp->data);
+        if(user->prevUser != curr->user1 && curr->user1->prevUser != user){
+            firstValidConnection = curr;
+        }
+        tmp = tmp->next;
     }
+
     printf("[%ld][FINDER] Queue Size: %d\n", pthread_self(), room->waitlist.size);
-    if (room->waitlist.size == 0 ||
-        (tid != -1 && pthread_equal(user->prev_tid, tid))) { // TODO deve vedere se c'è qualcuno dopo al top
+    if (room->waitlist.size == 0 || firstValidConnection == NULL) {
         printf("[%ld][FINDER] Enter in waitlist\n", pthread_self());
         Connection *conn = createConnection(user);
 
@@ -79,7 +84,7 @@ Connection* find(User* user, Room* room) {
             }
         }
         char c;
-        while (read(conn->pipefd[0], &c, 1) != -1);
+        while (read(conn->pipefd[0], &c, 1) != -1); // Clear pipe
 
         if(room->time > 0){
             setConnectionTimeout(conn, room->time);
@@ -88,7 +93,7 @@ Connection* find(User* user, Room* room) {
         return conn;
     } else {
         printf("[%ld][FINDER] Extract user from waitlist\n", pthread_self());
-        Connection *conn = (Connection *) dequeue(&room->waitlist);
+        Connection *conn = (Connection *) extract(&room->waitlist, (void*) firstValidConnection);
         connectUser(conn, user);
         pthread_mutex_unlock(&room->mutex);
 
