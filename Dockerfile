@@ -8,4 +8,6 @@ WORKDIR /home
 RUN cmake make .
 RUN make
 RUN make install
+RUN rm -r *
+COPY rooms.rc .
 ENTRYPOINT ["RandomChatServer"]
