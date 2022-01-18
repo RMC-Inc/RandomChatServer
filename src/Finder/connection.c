@@ -36,7 +36,7 @@ void closeConnection(Connection* conn){
     if(conn->status == 2) {
         close(conn->pipefd[0]);
         close(conn->pipefd[1]);
-        deleteTimer(conn->timer);
+        if(conn->timer != NULL) deleteTimer(conn->timer);
         free(conn);
     }
 }
