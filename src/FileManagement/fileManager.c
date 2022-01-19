@@ -7,9 +7,9 @@ int stringInside(const char* in, char left, char right, char* out, int maxLen){
     int strStart, strEnd;
     unsigned int strLen = strlen(in);
 
-    for (strStart = 0; strStart < strLen && in[strStart] != '['; ++strStart);
+    for (strStart = 0; strStart < strLen && in[strStart] != left; ++strStart);
     strStart++;
-    for (strEnd = strStart; strEnd < strLen && in[strEnd] != ']'; ++strEnd);
+    for (strEnd = strStart; strEnd < strLen && in[strEnd] != right; ++strEnd);
     if(strEnd <= strStart || strEnd - strStart >= maxLen) return 0;
 
     memcpy(out,in + strStart, strEnd - strStart);
@@ -28,31 +28,24 @@ void loadFromFile(RoomVector* vec, const char* filename){
         size_t strLen = 0;
 
         int id;
-        int roomColor[3], iconColor[3];
-        int icon;
+        unsigned long long roomColor;
         int time;
         char name[ROOM_NAME_LEN];
 
         while (getline(&roomStr, &strLen, file) != -1){
-            sscanf(roomStr, "%d %d.%d.%d %d %d.%d.%d %d",
+            sscanf(roomStr, "%d %llu %d",
                     &id,
-                    &roomColor[0], &roomColor[1], &roomColor[2],
-                    &icon,
-                    &iconColor[0], &iconColor[1], &iconColor[2],
+                    &roomColor,
                     &time
             );
             stringInside(roomStr, '[', ']', name, ROOM_NAME_LEN);
-            printf("Adding room: %d %d.%d.%d %d %d.%d.%d %d [%s]\n",
+            printf("Adding room: %d %llu %d [%s]\n",
                     id,
-                    roomColor[0], roomColor[1], roomColor[2],
-                    icon,
-                    iconColor[0], iconColor[1], iconColor[2],
+                    roomColor,
                     time,
                     name
             );
-            unsigned char iColor[3] = {(unsigned char) iconColor[0], (unsigned char) iconColor[1], (unsigned char) iconColor[2]};
-            unsigned char rColor[3] = {(unsigned char) roomColor[0], (unsigned char) roomColor[1], (unsigned char) roomColor[2]};
-            Room* room = newRoom(name, icon, iColor, rColor, time);
+            Room* room = newRoom(name, roomColor, time);
             room->id = id;
             add(vec, room, 0);
         }
@@ -87,11 +80,9 @@ _Noreturn void* autoSaveThread(void* args){
         if(file != NULL){
             for (int i = 0; i < vec->size; ++i) {
                 Room* r = vec->rooms[i];
-                fprintf(file, "%d %d.%d.%d %d %d.%d.%d %d [%s]\n",
+                fprintf(file, "%d %llu %d [%s]\n",
                       r->id,
-                      r->roomColor[0], r->roomColor[1], r->roomColor[2],
-                      r->icon,
-                      r->iconColor[0], r->iconColor[1], r->iconColor[2],
+                      r->roomColor,
                       r->time,
                       r->name
                 );
@@ -112,4 +103,5 @@ pthread_t startAutoSave(RoomVector* vec, const char* filename, int period){
 
     pthread_t tid;
     pthread_create(&tid, NULL, autoSaveThread, (void*) args);
+    return tid;
 }

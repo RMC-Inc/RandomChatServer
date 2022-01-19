@@ -13,7 +13,6 @@
 typedef struct USR{
     char nickname[NICK_LEN];
     int socketfd;
-    pthread_t tid;
 
     struct USR* prevUser;
 } User;

@@ -91,7 +91,6 @@ void* clientHandler(void* arg){
     printf("[t%ld] Thread started\n", tid);
 
     User* user = (User*) arg;
-    user->tid = pthread_self();
 
     // Setting nickname
 

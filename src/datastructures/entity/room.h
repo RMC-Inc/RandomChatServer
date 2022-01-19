@@ -14,9 +14,7 @@ typedef struct {
     char name[ROOM_NAME_LEN];
     unsigned int id; // unique
 
-    int icon;
-    unsigned char iconColor[3];
-    unsigned char roomColor[3];
+    unsigned long long roomColor;
 
     unsigned int time; // in seconds
 
@@ -25,7 +23,7 @@ typedef struct {
     long usersCount;
 } Room;
 
-Room* newRoom(char* name, int icon, unsigned char* iColor, unsigned char* rColor, unsigned int time);
+Room* newRoom(char* name, unsigned long long rColor, unsigned int time);
 
 
 #endif //RANDOMCHATSERVER_ROOM_H

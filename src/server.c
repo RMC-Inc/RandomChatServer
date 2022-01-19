@@ -72,7 +72,7 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec, char* buff){
         user->prevUser = user2;
 
         printf("[%lu] User found, nick: [%s]\n", pthread_self(), user2->nickname);
-        next = startChatting(user, user2, conn);
+        next = startChatting(user, user2, conn, buff-1);
     } while (next);
 
     printf("[%lu] Exit from room #%d.\n", pthread_self(), id);
@@ -87,26 +87,19 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec, char* buff){
 void addRoom(char* msg, RoomVector* vec, User* user){
     char name[ROOM_NAME_LEN];
 
-    int icon;
-    int iconColor[3], roomColor[3];
+    unsigned long long roomColor;
     int t;
 
-    sscanf(msg, "%d.%d.%d %d %d.%d.%d %d",
-           &roomColor[0], &roomColor[1], &roomColor[2],
-           &icon,
-           &iconColor[0], &iconColor[1], &iconColor[2],
+    sscanf(msg, "%llu %d",
+           &roomColor,
            &t
    );
-
-    unsigned char iconC[3] = {(unsigned char) iconColor[0], (unsigned char) iconColor[1], (unsigned char) iconColor[2]};
-    unsigned char roomC[3] = {(unsigned char) roomColor[0], (unsigned char) roomColor[1], (unsigned char) roomColor[2]};
-
 
     stringInside(msg, '[', ']', name, ROOM_NAME_LEN);
 
 
     pthread_mutex_lock(&vec->mutex);
-    unsigned int id = add(vec, newRoom(name, icon, iconC, roomC, t), 1);
+    unsigned int id = add(vec, newRoom(name, roomColor, t), 1);
     pthread_mutex_unlock(&vec->mutex);
 
     int len = sprintf(msg, "%c %d\n", NEW_ROOM, id);
@@ -131,12 +124,10 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
         printf("[%lu] Sending rooms to client: {\n", pthread_self());
         for (; from <= to && from < source->size; ++from) {
             Room* r = source->rooms[from];
-            len = sprintf(buff, "%d %ld %d.%d.%d %d %d.%d.%d %d [%s]\n",
+            len = sprintf(buff, "%d %ld %llu %d [%s]\n",
                           r->id,
                           r->usersCount,
-                          r->roomColor[0], r->roomColor[1], r->roomColor[2],
-                          r->icon,
-                          r->iconColor[0], r->iconColor[1], r->iconColor[2],
+                          r->roomColor,
                           r->time,
                           r->name
             );
@@ -153,8 +144,7 @@ int sortByUsercount(Room* a, Room* b){
     return a->usersCount > b->usersCount;
 }
 
-int startChatting(User* userRecv, User* userSend, Connection* conn){ // 0 -> exit; 1 -> next user
-    char buff[BUFF_LEN];
+int startChatting(User* userRecv, User* userSend, Connection* conn, char* buff){ // 0 -> exit; 1 -> next user
     ssize_t len;
 
     sprintf(buff, "r [%s]\n", userSend->nickname);
