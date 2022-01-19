@@ -26,7 +26,7 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg){
         case EXIT:
             return 0;
         default:
-            fprintf(stderr, "Unknown cmd: %d %s\n", command, msg);
+            printf("Unknown cmd: %d %s\n", command, msg);
             return 0;
     }
     return 1;
@@ -34,9 +34,8 @@ int dispatch(User* usr, RoomVector* vec, int command, char* msg){
 
 int changeNickname(User* user, char* msg){
     char newNick[NICK_LEN];
-    int len = stringInside(msg, '[', ']', newNick);
+    int len = stringInside(msg, '[', ']', newNick, NICK_LEN);
 
-    // controllo ridondante, è proprio necessario?? Ricorda gli hacker russi... Comunque così è anche più efficiente di strcmp
     for (int i = 0; i < len; ++i) {
         if(newNick[i] != ' '){
             strcpy(user->nickname, newNick);
@@ -103,7 +102,7 @@ void addRoom(char* msg, RoomVector* vec, User* user){
     unsigned char roomC[3] = {(unsigned char) roomColor[0], (unsigned char) roomColor[1], (unsigned char) roomColor[2]};
 
 
-    stringInside(msg, '[', ']', name);
+    stringInside(msg, '[', ']', name, ROOM_NAME_LEN);
 
 
     pthread_mutex_lock(&vec->mutex);
@@ -121,7 +120,7 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
 
     ssize_t len;
     char name[ROOM_NAME_LEN];
-    int nameLen = stringInside(buff, '[', ']', name);
+    int nameLen = stringInside(buff, '[', ']', name, ROOM_NAME_LEN);
 
     RoomVector* source = (nameLen > 0)? searchByName(roomVector, name): RoomVectorCopy(roomVector);
 
@@ -132,7 +131,7 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
         printf("[%lu] Sending rooms to client: {\n", pthread_self());
         for (; from <= to && from < source->size; ++from) {
             Room* r = source->rooms[from];
-            len = sprintf(buff, "%c %d %ld %d.%d.%d %d %d.%d.%d %d [%s]\n", ROOM_LIST,
+            len = sprintf(buff, "%d %ld %d.%d.%d %d %d.%d.%d %d [%s]\n",
                           r->id,
                           r->usersCount,
                           r->roomColor[0], r->roomColor[1], r->roomColor[2],

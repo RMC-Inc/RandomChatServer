@@ -20,16 +20,6 @@ int main() {
     int sortById(Room*, Room*);
     sortBy(roomVector, sortById);
 
-    //Room* r = newRoom("Stanza di prova1", 0, (unsigned char[]) {1 , 2, 4}, (unsigned char[]){1, 2, 4}, 0);
-    //add(roomVector, r);
-    //r = newRoom("Stanza di prova2", 5000, (unsigned char[]) {255 , 200, 55}, (unsigned char[]){22, 0, 100}, 5);
-    //add(roomVector, r);
-
-    // a r.g.b icon r.g.b t [roomname]
-    // a 255.0.0 500 0.100.100 0 [Stanza di prova1]
-    // a 0.255.0 500 100.0.100 0 [Stanza di prova2]
-    // a 0.0.255 500 100.100.0 100 [Stanza di prova3]
-
     loadFromFile(roomVector, "rooms.rc");
 
     startAutoSave(roomVector, "rooms.rc", 60 * 5);
@@ -105,19 +95,22 @@ void* clientHandler(void* arg){
 
     // Setting nickname
 
-    msglen = recv(user->socketfd, buff, NICK_LEN, 0);
+    msglen = recv(user->socketfd, buff, BUFF_LEN, 0);
     if(msglen <= 0){
-        fprintf(stderr, "[t%ld] Error recv nickname Closing connection\n", tid); perror(errno);
-        close(user->socketfd);
+        printf("[t%ld] Connection closed by client (nickname)\n", tid); perror(errno);
+        printf("[t%ld] Closing connection\n", tid);
+        if(close(user->socketfd) < 0){
+            perror("Error in Closing connection.\n"); perror(errno);
+        }
         free(user);
         pthread_exit(NULL);
     }
     buff[msglen] = '\0';
 
     if(!changeNickname(user, buff)){
-        fprintf(stderr, "[t%ld] Invalid nickname, closing connection.\n", tid);
+        printf("[%ld] Invalid nickname, closing connection.\n", tid);
         if(close(user->socketfd) < 0){
-            perror("Error Closing connection.\n"); perror(errno);
+            perror("Error in Closing connection.\n"); perror(errno);
         }
         free(user);
         pthread_exit(NULL);
@@ -128,7 +121,7 @@ void* clientHandler(void* arg){
         msglen = recv(user->socketfd, buff, BUFF_LEN, MSG_NOSIGNAL);
         if(msglen <= 0){
             if(errno == EINTR) continue;
-            fprintf(stderr, "[t%ld] Error connection closed by client\n", tid); perror(errno);
+            printf("[t%ld] Connection closed by client\n", tid); perror(errno);
             break;
         }
         buff[msglen] = '\0';
@@ -137,7 +130,7 @@ void* clientHandler(void* arg){
 
     printf("[t%ld] Closing connection\n", tid);
     if(close(user->socketfd) < 0){
-        perror("Error Closing connection.\n"); perror(errno);
+        perror("Error in Closing connection.\n"); perror(errno);
     }
     free(user);
     pthread_exit(NULL);

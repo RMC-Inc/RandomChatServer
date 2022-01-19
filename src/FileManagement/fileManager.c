@@ -3,14 +3,14 @@
 #include <stdio.h>
 #include "../Timer/timer.h"
 
-int stringInside(const char* in, char left, char right, char* out){
+int stringInside(const char* in, char left, char right, char* out, int maxLen){
     int strStart, strEnd;
     unsigned int strLen = strlen(in);
 
     for (strStart = 0; strStart < strLen && in[strStart] != '['; ++strStart);
     strStart++;
     for (strEnd = strStart; strEnd < strLen && in[strEnd] != ']'; ++strEnd);
-    if(strEnd <= strStart) return 0;
+    if(strEnd <= strStart || strEnd - strStart >= maxLen) return 0;
 
     memcpy(out,in + strStart, strEnd - strStart);
     out[strEnd - strStart] = '\0';
@@ -41,7 +41,7 @@ void loadFromFile(RoomVector* vec, const char* filename){
                     &iconColor[0], &iconColor[1], &iconColor[2],
                     &time
             );
-            stringInside(roomStr, '[', ']', name);
+            stringInside(roomStr, '[', ']', name, ROOM_NAME_LEN);
             printf("Adding room: %d %d.%d.%d %d %d.%d.%d %d [%s]\n",
                     id,
                     roomColor[0], roomColor[1], roomColor[2],

@@ -3,7 +3,7 @@
 #include "../datastructures/vector.h"
 
 // return substring len
-int stringInside(const char* in, char left, char right, char* out);
+int stringInside(const char* in, char left, char right, char* out, int maxLen);
 
 void loadFromFile(RoomVector* vec, const char* filename);
 
