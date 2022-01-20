@@ -124,7 +124,7 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
         printf("[%lu] Sending rooms to client: {\n", pthread_self());
         for (; from <= to && from < source->size; ++from) {
             Room* r = source->rooms[from];
-            len = sprintf(buff, "%d %ld %llu %d [%s]\n",
+            len = sprintf(buff, "%c %d %ld %llu %d [%s]\n", ROOM_LIST,
                           r->id,
                           r->usersCount,
                           r->roomColor,
