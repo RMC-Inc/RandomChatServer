@@ -23,6 +23,7 @@ enum COMMAND{
     SEND_MSG = 'm',
 
     TIME_EXPIRED = 't',
+    EXIT_FROM_ROOM = 'x',
 
     EXIT = 'e',
 };

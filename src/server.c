@@ -76,7 +76,7 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec, char* buff){
     } while (next);
 
     printf("[%lu] Exit from room #%d.\n", pthread_self(), id);
-    strcpy(buff, "e\n");
+    strcpy(buff, "x\n");
     send(user->socketfd, buff, 2, MSG_NOSIGNAL);
 
     pthread_mutex_lock(&room->mutex);
@@ -119,6 +119,12 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
 
     int sortByUsercount(Room*, Room*);
     sortBy(source, sortByUsercount);
+
+    unsigned int sendingRooms = to - from;
+    if(sendingRooms > (source->size - from)) sendingRooms = source->size - from;
+
+    len = sprintf(buff, "%c %u\n", ROOM_LIST, sendingRooms);
+    send(user->socketfd, buff, len, MSG_NOSIGNAL);
 
     if(source->size != 0){
         printf("[%lu] Sending rooms to client: {\n", pthread_self());
@@ -164,7 +170,7 @@ int startChatting(User* userRecv, User* userSend, Connection* conn, char* buff){
         }
         if(len >= 0){
 
-            if(!timeExpired && FD_ISSET(conn->pipefd[0], &rfdSet)){ // timer expired
+            if(conn->timer != NULL && !timeExpired && FD_ISSET(conn->pipefd[0], &rfdSet)){ // timer expired
                 printf("[%ld] Time expired", pthread_self());
                 buff[0] = TIME_EXPIRED;
                 buff[1] = '\n';
