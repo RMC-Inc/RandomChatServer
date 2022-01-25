@@ -108,7 +108,7 @@ void addRoom(char* msg, RoomVector* vec, User* user){
 
 void sendRooms(User* user, RoomVector* roomVector, char* buff){
 
-    unsigned int from = 0, to = (roomVector->size == 0)? 0: (roomVector->size - 1);
+    unsigned int from = 0, to = 0;
     sscanf(buff, "%d %d", &from, &to);
 
     ssize_t len;
@@ -120,15 +120,19 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
     int sortByUsercount(Room*, Room*);
     sortBy(source, sortByUsercount);
 
-    unsigned int sendingRooms = to - from;
-    if(sendingRooms > (source->size - from)) sendingRooms = source->size - from;
+    unsigned int sendingRooms;
+    if(from == 0 && to == 0) {
+        sendingRooms = source->size;
+        to = source->size;
+    }else if(to > source->size) sendingRooms = source->size - from;
+    else sendingRooms = to - from;
 
     len = sprintf(buff, "%c %u\n", ROOM_LIST, sendingRooms);
     send(user->socketfd, buff, len, MSG_NOSIGNAL);
 
     if(source->size != 0){
         printf("[%lu] Sending rooms to client: {\n", pthread_self());
-        for (; from <= to && from < source->size; ++from) {
+        for (; from < to && from < source->size; ++from) {
             Room* r = source->rooms[from];
             len = sprintf(buff, "%c %d %ld %llu %d [%s]\n", ROOM_LIST,
                           r->id,
@@ -185,6 +189,7 @@ int startChatting(User* userRecv, User* userSend, Connection* conn, char* buff){
                     if(isOpen(conn)){
                         closeConnection(conn);
                         buff[0] = EXIT;
+                        buff[1] = '\n';
                         send(userSend->socketfd, buff, 1, MSG_NOSIGNAL);
                     } else closeConnection(conn);
                     return 0;
