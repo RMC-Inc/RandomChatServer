@@ -190,7 +190,7 @@ int startChatting(User* userRecv, User* userSend, Connection* conn, char* buff){
                         closeConnection(conn);
                         buff[0] = EXIT;
                         buff[1] = '\n';
-                        send(userSend->socketfd, buff, 1, MSG_NOSIGNAL);
+                        send(userSend->socketfd, buff, 2, MSG_NOSIGNAL);
                     } else closeConnection(conn);
                     return 0;
                 }
