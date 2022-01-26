@@ -65,14 +65,14 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec, char* buff){
     int next;
     do{
         printf("[%lu] Searching for user.\n", pthread_self());
-        Connection* conn = find(user, room);
+        Connection* conn = find(user, room, buff-1, BUFF_LEN);
         if(conn == NULL) break;
 
         User* user2 = (conn->user1 == user)? conn->user2: conn->user1;
         user->prevUser = user2;
 
         printf("[%lu] User found, nick: [%s]\n", pthread_self(), user2->nickname);
-        next = startChatting(user, user2, conn, buff-1);
+        next = startChatting(user, user2, conn, buff-1, room);
     } while (next);
 
     printf("[%lu] Exit from room #%d.\n", pthread_self(), id);
@@ -154,7 +154,7 @@ int sortByUsercount(Room* a, Room* b){
     return a->usersCount > b->usersCount;
 }
 
-int startChatting(User* userRecv, User* userSend, Connection* conn, char* buff){ // 0 -> exit; 1 -> next user
+int startChatting(User* userRecv, User* userSend, Connection* conn, char* buff, Room* room){ // 0 -> exit; 1 -> next user
     ssize_t len;
 
     sprintf(buff, "r [%s]\n", userSend->nickname);
@@ -207,6 +207,11 @@ int startChatting(User* userRecv, User* userSend, Connection* conn, char* buff){
                             send(userSend->socketfd, buff, len, MSG_NOSIGNAL);
                         } else closeConnection(conn);
                         return 1;
+
+                    case USERS_IN_ROOM:
+                        len = sprintf(buff, "%c %lu\n", USERS_IN_ROOM, room->usersCount);
+                        send(userRecv->socketfd, buff, len, MSG_NOSIGNAL);
+                        break;
                     case EXIT:
                         if(isOpen(conn)){
                             closeConnection(conn);

@@ -24,6 +24,7 @@ enum COMMAND{
 
     TIME_EXPIRED = 't',
     EXIT_FROM_ROOM = 'x',
+    USERS_IN_ROOM = 'u',
 
     EXIT = 'e',
 };
@@ -41,7 +42,7 @@ void sendRooms(User*, RoomVector*, char*);
 
 
 
-int startChatting(User*, User*, Connection*, char* buff); // Read data from user1 and send to user2 until exit or next
+int startChatting(User*, User*, Connection*, char* buff, Room* room); // Read data from user1 and send to user2 until exit or next
 // 0 -> exit
 // 1 -> next user
 

@@ -9,7 +9,7 @@
 
 // *** Finder ***
 
-Connection* find(User* user, Room* room) {
+Connection* find(User* user, Room* room, char* buff, int buff_size) {
     pthread_mutex_lock(&room->mutex);
 
     Connection* firstValidConnection = NULL;
@@ -43,7 +43,6 @@ Connection* find(User* user, Room* room) {
             int retVal = select(((user->socketfd > conn->pipefd[0]) ? user->socketfd : conn->pipefd[0]) + 1,
                                 &rfdSet,NULL, &errfdSet, NULL);
             if (retVal >= 0) {
-                char buff[10];
                 int terminate = 0;
 
                 if (FD_ISSET(conn->pipefd[0], &rfdSet)) {
@@ -53,11 +52,15 @@ Connection* find(User* user, Room* room) {
                 }
 
                 if (FD_ISSET(user->socketfd, &rfdSet)) {
-                    unsigned int len = recv(user->socketfd, buff, 10, MSG_DONTWAIT | MSG_NOSIGNAL);
+                    unsigned int len = recv(user->socketfd, buff, buff_size, MSG_DONTWAIT | MSG_NOSIGNAL);
                     if (len > 0) {
                         buff[len] = '\0';
                         printf("[%ld][FINDER] Recived message: %s\n", pthread_self(), buff);
                         if (buff[0] == 'e') terminate = 1;
+                        else if(buff[0] == 'u'){
+                            len = sprintf(buff, "%c %lu\n", 'u', room->usersCount);
+                            send(user->socketfd, buff, len, MSG_NOSIGNAL);
+                        }
                     } else if (errno != EINTR) terminate = 1;
                 }
 

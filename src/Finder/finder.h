@@ -7,7 +7,7 @@
 #include "connection.h"
 
 
-Connection* find(User* user, Room*); // Blocking
+Connection* find(User* user, Room*, char* buff, int buff_size); // Blocking
 
 
 #endif //RANDOMCHATSERVER_FINDER_H
