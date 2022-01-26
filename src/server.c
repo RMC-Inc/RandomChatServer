@@ -69,7 +69,7 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec, char* buff){
         if(conn == NULL) break;
 
         User* user2 = (conn->user1 == user)? conn->user2: conn->user1;
-        user->prevUser = user2;
+        user->prev = user2->connectionCount;
 
         printf("[%lu] User found, nick: [%s]\n", pthread_self(), user2->nickname);
         next = startChatting(user, user2, conn, buff-1, room);

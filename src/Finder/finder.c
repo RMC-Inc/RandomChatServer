@@ -17,7 +17,7 @@ Connection* find(User* user, Room* room, char* buff, int buff_size) {
 
     while (tmp != NULL && firstValidConnection == NULL){
         Connection* curr = ((Connection*) tmp->data);
-        if(user->prevUser != curr->user1 && curr->user1->prevUser != user){
+        if(user->prev != curr->user1->connectionCount && curr->user1->prev != user->connectionCount){
             firstValidConnection = curr;
         }
         tmp = tmp->next;

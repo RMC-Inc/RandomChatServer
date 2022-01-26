@@ -54,7 +54,7 @@ int main() {
 
 
 // ----- Wait for client -----
-
+    unsigned long long connectionCount = 1;
     while (1){
         printf("Await for client...\n");
 
@@ -64,12 +64,14 @@ int main() {
             exit(EXIT_FAILURE);
         }
 
-        printf("New connection starting thread...\n");
+        printf("New connection (n %llu) starting thread...\n", connectionCount);
         pthread_t tid;
 
         User* user = malloc(sizeof(User));
         user->socketfd = client;
-        user->prevUser = NULL;
+        user->prev = 0;
+        user->connectionCount = connectionCount++;
+        if(connectionCount == 0) connectionCount++;
 
         pthread_create(&tid, NULL, clientHandler, (void*) user);
         pthread_detach(tid);
