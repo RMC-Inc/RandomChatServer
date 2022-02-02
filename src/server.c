@@ -39,7 +39,7 @@ int changeNickname(User* user, char* msg){
     for (int i = 0; i < len; ++i) {
         if(newNick[i] != ' '){
             strcpy(user->nickname, newNick);
-            printf("[%lu] Nickname is set to [%s].\n", pthread_self(), user->nickname);
+            printf("[%llu] Nickname is set to [%s].\n", user->connectionCount, user->nickname);
             return 1;
         }
     }
@@ -48,11 +48,11 @@ int changeNickname(User* user, char* msg){
 
 void enterInRoom(User* user , unsigned int id, RoomVector* vec, char* buff){
 
-    printf("[%lu] Try to enter in room #%d.\n", pthread_self(), id);
+    printf("[%llu] Try to enter in room #%d.\n", user->connectionCount, id);
 
     Room* room = getbyId(vec, id);
     if(room == NULL) {
-        printf("[%lu] Error entering in room #%d. Id not valid\n", pthread_self(), id);
+        printf("[%llu] Error entering in room #%d. Id not valid\n", user->connectionCount, id);
         strcpy(buff, "e\n");
         send(user->socketfd, buff, 2, MSG_NOSIGNAL);
         return;
@@ -64,18 +64,18 @@ void enterInRoom(User* user , unsigned int id, RoomVector* vec, char* buff){
 
     int next;
     do{
-        printf("[%lu] Searching for user.\n", pthread_self());
+        printf("[%llu] Searching for user.\n", user->connectionCount);
         Connection* conn = find(user, room, buff-1, BUFF_LEN);
         if(conn == NULL) break;
 
         User* user2 = (conn->user1 == user)? conn->user2: conn->user1;
         user->prev = user2->connectionCount;
 
-        printf("[%lu] User found, nick: [%s]\n", pthread_self(), user2->nickname);
+        printf("[%llu] User found, nick: [%s]\n", user->connectionCount, user2->nickname);
         next = startChatting(user, user2, conn, buff-1, room);
     } while (next);
 
-    printf("[%lu] Exit from room #%d.\n", pthread_self(), id);
+    printf("[%llu] Exit from room #%d.\n", user->connectionCount, id);
     strcpy(buff, "x\n");
     send(user->socketfd, buff, 2, MSG_NOSIGNAL);
 
@@ -101,6 +101,8 @@ void addRoom(char* msg, RoomVector* vec, User* user){
     pthread_mutex_lock(&vec->mutex);
     unsigned int id = add(vec, newRoom(name, roomColor, t), 1);
     pthread_mutex_unlock(&vec->mutex);
+
+    printf("[%llu] Room Added {%u %llu %d [%s]}", user->connectionCount, id, roomColor, t, name);
 
     int len = sprintf(msg, "%c %d\n", NEW_ROOM, id);
     send(user->socketfd, msg, len+1,MSG_NOSIGNAL);
@@ -131,7 +133,7 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
     send(user->socketfd, buff, len, MSG_NOSIGNAL);
 
     if(source->size != 0){
-        printf("[%lu] Sending rooms to client: {\n", pthread_self());
+        printf("[%llu] Sending rooms to client: {\n", user->connectionCount);
         for (; from < to && from < source->size; ++from) {
             Room* r = source->rooms[from];
             len = sprintf(buff, "%c %d %ld %llu %d [%s]\n", ROOM_LIST,
@@ -143,9 +145,9 @@ void sendRooms(User* user, RoomVector* roomVector, char* buff){
             );
             len = send(user->socketfd, buff, len, MSG_NOSIGNAL);
             if(len < 0 && errno != EINTR) break;
-            printf("[%lu] %s", pthread_self(), buff);
+            printf("[%llu] %s", user->connectionCount, buff);
         }
-        printf("[%lu] }\n", pthread_self());
+        printf("[%llu] }\n", user->connectionCount);
     }
     deleteVector(source);
 }
@@ -175,7 +177,7 @@ int startChatting(User* userRecv, User* userSend, Connection* conn, char* buff, 
         if(len >= 0){
 
             if(conn->timer != NULL && !timeExpired && FD_ISSET(conn->pipefd[0], &rfdSet)){ // timer expired
-                printf("[%ld] Time expired", pthread_self());
+                printf("[%llu] Time expired\n", userRecv->connectionCount);
                 buff[0] = TIME_EXPIRED;
                 buff[1] = '\n';
                 send(userRecv->socketfd, buff, 2, MSG_NOSIGNAL);

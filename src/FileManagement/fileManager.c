@@ -75,6 +75,7 @@ _Noreturn void* autoSaveThread(void* args){
         startTimer(t);
         waitForTimer(t);
 
+        printf("[AUTOSAVE] Saving rooms in %s\n", filename);
         pthread_mutex_lock(&vec->mutex);
         FILE* file = fopen(filename, "w");
         if(file != NULL){

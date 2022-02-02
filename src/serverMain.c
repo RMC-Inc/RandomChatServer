@@ -88,18 +88,17 @@ int main() {
 void* clientHandler(void* arg){
     char buff[BUFF_LEN];
     ssize_t msglen;
-    pthread_t tid = pthread_self();
-
-    printf("[t%ld] Thread started\n", tid);
 
     User* user = (User*) arg;
+
+    printf("[%llu] Thread started\n", user->connectionCount);
 
     // Setting nickname
 
     msglen = recv(user->socketfd, buff, BUFF_LEN, 0);
     if(msglen <= 0){
-        printf("[t%ld] Connection closed by client (nickname)\n", tid);
-        printf("[t%ld] Closing connection\n", tid);
+        printf("[%llu] Connection closed by client (nickname)\n", user->connectionCount);
+        printf("[%llu] Closing connection\n", user->connectionCount);
         if(close(user->socketfd) < 0){
             perror("Error in Closing connection.\n");
         }
@@ -109,9 +108,9 @@ void* clientHandler(void* arg){
     buff[msglen] = '\0';
 
     if(!changeNickname(user, buff)){
-        printf("[%ld] Invalid nickname, closing connection.\n", tid);
+        printf("[%llu] Invalid nickname, closing connection.\n", user->connectionCount);
         if(close(user->socketfd) < 0){
-            perror("Error in Closing connection.\n");
+            printf("[%llu] Error in Closing connection.\n", user->connectionCount);
         }
         free(user);
         pthread_exit(NULL);
@@ -122,16 +121,16 @@ void* clientHandler(void* arg){
         msglen = recv(user->socketfd, buff, BUFF_LEN, MSG_NOSIGNAL);
         if(msglen <= 0){
             if(errno == EINTR) continue;
-            printf("[%lu] Connection closed by client\n", tid);
+            printf("[%llu] Connection closed by client\n", user->connectionCount);
             break;
         }
         buff[msglen] = '\0';
-        printf("[t%ld] Data recived from client: %s\n", tid, buff);
+        printf("[%llu] Data recived from client: %s\n", user->connectionCount, buff);
     } while(dispatch(user, roomVector, buff[0], buff+1));
 
-    printf("[t%ld] Closing connection\n", tid);
+    printf("[%llu] Closing connection\n", user->connectionCount);
     if(close(user->socketfd) < 0){
-        perror("Error in Closing connection.\n");
+        printf("[%llu] Error in Closing connection.\n", user->connectionCount);
     }
     free(user);
     pthread_exit(NULL);
