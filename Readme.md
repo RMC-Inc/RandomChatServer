@@ -158,36 +158,23 @@ Durante la ricerca di un altro utente se si invia il comando ***EXIT*** si ritor
 > 
 
 ### Creare una nuova stanza
-Per creare una nuova stanza bisona scegliere un nome di massimo *30 bytes*, un icona, il colore dell'icona e il colore della stanza in formato rgb.
-Nel caso che la stanza sia temporizzata è necessario specificare il tempo di durata massima di ogni chat in secondi.
-Icone e colori aiutano a rappresentare il tema della stanza. Le icone sono rappresentate da un intero a 4 bytes e si riferiscono al font standard di android per le icone
-reperibili a questo [link](https://github.com/google/material-design-icons).
-
-<link
-	rel="stylesheet"
-	href="https://material-icons.github.io/material-icons-font/css/all.css"
-/>
+Per creare una nuova stanza bisona scegliere un nome di massimo *30 bytes*, il tempo massimo per chat (opzionale) e il colore della stanza in formato rgb decimale.
+I colori aiutano a rappresentare il tema della stanza.
 
 > #### Esempio  
-> Si assuma di voler creare una nuova stanza tematica per studenti di informatica, non temporizzata, con l'icona
-> di un computer, colore dell'icona grigia e stanza verde.
+> Si assuma di voler creare una nuova stanza tematica per studenti di informatica, non temporizzata e con colore della stanza verde.
 > 
-> Il codice esadecimale dell'icona di un computer è 0xe30a che in decimale equivale a 58122.
-> > <i class="material-icons md-48 md-computer"></i>
 >
-> Il codice rgb di un grigio chiaro è 0xeeeeee che in formato decimale r.g.b equivale a 238.238.238.
-> 
-> Quindi il verde sarà 0.255.0.
+> Il codice rgb del verde è 0x00ff00 che in formato decimale equivale a 65.280.
 > 
 > Per creare una nuova stanza basta inviare al server una stringa con il seguente formato
-> `NEW_ROOM r.g.b icon r.g.b time [roomName]` dove il primo parametro rgb rappresenta il colore della stanza e il secondo il colore dell'icona.
+> `NEW_ROOM rgb time [roomName]`.
 > 
 > La stanza di esempio va creata quindi con la stringa
-> `NEW_ROOM 238.238.238 58122 0.255.0 0 'Studenti di informatica'`
+> `NEW_ROOM 65280 0 [Studenti di informatica 💻]`
 
 ### Lista delle stanze
 Con il comando ***ROOM_LIST*** è possibile ricevere una lista delle stanze ed effettuare una ricerca. Il client deve specificare quante stanze vuole ricevere.
-
 
 > #### Esempio
 > Per ricevere la lista delle stanze dal server inviare il comando `ROOM_LIST 0 10 []`.
@@ -197,4 +184,4 @@ Con il comando ***ROOM_LIST*** è possibile ricevere una lista delle stanze ed e
 > Per effettuare una ricerca basta scrivere la stringa tra le parentesi quadre `ROOM_LIST 0 10 [Ricerca]`. Questo comando elencherà massimo
 > 11 stanze nel nome contengono la stringa "Ricerca" (La ricerca è case insensitive)
 > 
-> Ogni stanza arriva con il formato `id usersCout r.g.b icon r.g.b time [name]`
+> Ogni stanza arriva con il formato `id usersCout rgb time [name]`
